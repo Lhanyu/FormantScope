@@ -6,6 +6,17 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7E04724E2F9D067000A91052 /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E04724D2F9D067000A91052 /* AudioKit */; };
+		7E0472512F9D07D500A91052 /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472502F9D07D500A91052 /* AudioKit */; };
+		7E04725D2F9D085F00A91052 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7E0472582F9D085F00A91052 /* Assets.xcassets */; };
+		7E04725E2F9D085F00A91052 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0472592F9D085F00A91052 /* ContentView.swift */; };
+		7E04725F2F9D085F00A91052 /* VoiceToolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */; };
+		7E047270AAAA000000A91052 /* AudioAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */; };
+		7E0472622F9D0DED00A91052 /* CSoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472612F9D0DED00A91052 /* CSoundpipeAudioKit */; };
+		7E0472642F9D0DEE00A91052 /* SoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472632F9D0DED00A91052 /* SoundpipeAudioKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		7E04721C2F9D01EE00A91052 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,14 +38,14 @@
 		7E04720D2F9D01EC00A91052 /* VoiceTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoiceTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E04721B2F9D01EE00A91052 /* VoiceToolTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VoiceToolTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E0472252F9D01EE00A91052 /* VoiceToolUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VoiceToolUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E0472582F9D085F00A91052 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7E0472592F9D085F00A91052 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAnalyzer.swift; sourceTree = "<group>"; };
+		7E04725A2F9D085F00A91052 /* VoiceTool.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VoiceTool.entitlements; sourceTree = "<group>"; };
+		7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceToolApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7E04720F2F9D01EC00A91052 /* VoiceTool */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = VoiceTool;
-			sourceTree = "<group>";
-		};
 		7E04721E2F9D01EE00A91052 /* VoiceToolTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = VoiceToolTests;
@@ -52,6 +63,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E0472622F9D0DED00A91052 /* CSoundpipeAudioKit in Frameworks */,
+				7E0472512F9D07D500A91052 /* AudioKit in Frameworks */,
+				7E0472642F9D0DEE00A91052 /* SoundpipeAudioKit in Frameworks */,
+				7E04724E2F9D067000A91052 /* AudioKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,7 +90,7 @@
 		7E0472042F9D01EB00A91052 = {
 			isa = PBXGroup;
 			children = (
-				7E04720F2F9D01EC00A91052 /* VoiceTool */,
+				7E04725C2F9D085F00A91052 /* VoiceTool */,
 				7E04721E2F9D01EE00A91052 /* VoiceToolTests */,
 				7E0472282F9D01EE00A91052 /* VoiceToolUITests */,
 				7E04720E2F9D01EC00A91052 /* Products */,
@@ -90,6 +105,18 @@
 				7E0472252F9D01EE00A91052 /* VoiceToolUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		7E04725C2F9D085F00A91052 /* VoiceTool */ = {
+			isa = PBXGroup;
+			children = (
+			7E0472582F9D085F00A91052 /* Assets.xcassets */,
+			7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */,
+			7E0472592F9D085F00A91052 /* ContentView.swift */,
+				7E04725A2F9D085F00A91052 /* VoiceTool.entitlements */,
+				7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */,
+			);
+			path = VoiceTool;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -107,11 +134,12 @@
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				7E04720F2F9D01EC00A91052 /* VoiceTool */,
-			);
 			name = VoiceTool;
 			packageProductDependencies = (
+				7E04724D2F9D067000A91052 /* AudioKit */,
+				7E0472502F9D07D500A91052 /* AudioKit */,
+				7E0472612F9D0DED00A91052 /* CSoundpipeAudioKit */,
+				7E0472632F9D0DED00A91052 /* SoundpipeAudioKit */,
 			);
 			productName = VoiceTool;
 			productReference = 7E04720D2F9D01EC00A91052 /* VoiceTool.app */;
@@ -195,6 +223,10 @@
 			);
 			mainGroup = 7E0472042F9D01EB00A91052;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7E04724F2F9D07D500A91052 /* XCLocalSwiftPackageReference "AudioKit" */,
+				7E0472602F9D0DED00A91052 /* XCRemoteSwiftPackageReference "SoundpipeAudioKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7E04720E2F9D01EC00A91052 /* Products */;
 			projectDirPath = "";
@@ -212,6 +244,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E04725D2F9D085F00A91052 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,6 +269,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			7E04725E2F9D085F00A91052 /* ContentView.swift in Sources */,
+			7E04725F2F9D085F00A91052 /* VoiceToolApp.swift in Sources */,
+			7E047270AAAA000000A91052 /* AudioAnalyzer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,6 +433,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"Need Microphone\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -436,6 +473,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"Need Microphone\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -593,6 +631,45 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		7E04724F2F9D07D500A91052 /* XCLocalSwiftPackageReference "AudioKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = AudioKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7E0472602F9D0DED00A91052 /* XCRemoteSwiftPackageReference "SoundpipeAudioKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/SoundpipeAudioKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.7.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7E04724D2F9D067000A91052 /* AudioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioKit;
+		};
+		7E0472502F9D07D500A91052 /* AudioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioKit;
+		};
+		7E0472612F9D0DED00A91052 /* CSoundpipeAudioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E0472602F9D0DED00A91052 /* XCRemoteSwiftPackageReference "SoundpipeAudioKit" */;
+			productName = CSoundpipeAudioKit;
+		};
+		7E0472632F9D0DED00A91052 /* SoundpipeAudioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E0472602F9D0DED00A91052 /* XCRemoteSwiftPackageReference "SoundpipeAudioKit" */;
+			productName = SoundpipeAudioKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7E0472052F9D01EB00A91052 /* Project object */;
 }

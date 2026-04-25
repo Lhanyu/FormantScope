@@ -9,9 +9,68 @@ import SwiftUI
 
 @main
 struct VoiceToolApp: App {
+    init() {
+        suppressCoreAudioXPCNoise()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
         }
+    }
+}
+
+// MARK: - stderr 噪声过滤
+
+/// CoreAudio / XPC 产生的 NSXPCDecoder 警告走 NSLog → stderr（*** 开头），
+/// 无法通过 OS_ACTIVITY_DT_MODE 抑制。此函数将 stderr 接入过滤管道：
+/// 含噪声关键词的行直接丢弃，其余行写回原始 stderr，print() 走 stdout 完全不受影响。
+private func suppressCoreAudioXPCNoise() {
+    // 保存原始 stderr 文件描述符
+    let origFd = dup(STDERR_FILENO)
+    guard origFd >= 0 else { return }
+
+    var pipefd: [Int32] = [-1, -1]
+    guard pipe(&pipefd) == 0 else { close(origFd); return }
+
+    // 把 stderr 重定向到管道写端
+    dup2(pipefd[1], STDERR_FILENO)
+    close(pipefd[1])
+
+    let readFd = pipefd[0]
+
+    // 后台线程：从管道读端逐行过滤，非噪声行写回原始 stderr
+    Thread.detachNewThread {
+        let origOut = FileHandle(fileDescriptor: origFd, closeOnDealloc: true)
+        var chunk   = [UInt8](repeating: 0, count: 4_096)
+        var pending = Data()
+
+        while true {
+            let n = read(readFd, &chunk, chunk.count)
+            guard n > 0 else { break }
+            pending.append(contentsOf: chunk[..<n])
+
+            // 逐行处理（保留不以换行结尾的末尾碎片留到下次）
+            while let nl = pending.firstIndex(of: UInt8(ascii: "\n")) {
+                let end      = pending.index(after: nl)
+                let lineData = Data(pending[pending.startIndex ..< end])
+                let line     = String(bytes: lineData, encoding: .utf8) ?? ""
+
+                let isNoise  = line.contains("NSXPCDecoder")
+                            || line.contains("NSSecureCoding")
+                            || line.contains("bad range for [%{public}@]")
+                            || line.contains("Allowed class list")
+                            || line.contains("'NSObject'")
+                            || line.trimmingCharacters(in: .whitespaces) == "{("
+                            || line.trimmingCharacters(in: .whitespaces) == ")}"
+                if !isNoise { origOut.write(lineData) }
+
+                pending.removeSubrange(pending.startIndex ..< end)
+            }
+        }
+
+        // 写出残余未换行内容
+        if !pending.isEmpty { origOut.write(pending) }
+        close(readFd)
     }
 }
