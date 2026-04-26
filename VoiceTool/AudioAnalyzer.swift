@@ -44,8 +44,10 @@ final class AudioAnalyzer: ObservableObject {
     /// 2 帧 ≈ 180 ms，比原来 3 帧（270 ms）更快响应，减少元音起始的 F0 延迟。
     static let requiredConsecutiveFrames: Int = 2
     /// F0 显示保持帧数（offset hysteresis）：确认的 F0 消失后，再保持这么多帧再断线。
-    /// ~450 ms 足以跨越大多数清辅音（/p/ /t/ /k/ 闭塞段约 50–150 ms）。
-    private static let maxPitchHoldFrames: Int = 5
+    /// PitchTap 默认 buffer=4096，在 44.1 kHz 下每帧约 93 ms。
+    /// 设为 1 → 尾巴 ≈ 93 ms，仅吸收单帧抖动，肉眼几乎不可见，避免长尾效应。
+    /// （原值 5 ≈ 465 ms 长尾，是为跨越清辅音闭塞段而设；本工具是连续元音追踪，不需要这种桥接。）
+    private static let maxPitchHoldFrames: Int = 1
     /// 相邻帧允许的最大 F0 变化。超过后不立刻采纳，先作为“可疑突变”观察。
     private static let maxPitchDeltaPerFrame: Float = 200
     /// 大跳变至少连续出现这么多帧才接受，抑制咽气/口水等瞬态毛刺。
@@ -175,8 +177,8 @@ final class AudioAnalyzer: ObservableObject {
         // PitchTap：提取 F0 和幅度（AudioKitEX 内部使用 AUBIO，已自动派发到 main）
         pitchTap = PitchTap(mic) { [weak self] pitches, amps in
             guard let self else { return }
-            let currentPitch = pitches[0]
-            let currentAmp   = amps[0]
+            // AUBIO 在静音/瞬态首帧偶尔返回空数组，直接 [0] 下标会崩溃。
+            guard let currentPitch = pitches.first, let currentAmp = amps.first else { return }
 
             let isVoice = currentAmp   >= Self.amplitudeThreshold
                        && currentPitch >= Self.minPitch
@@ -560,6 +562,11 @@ final class AudioAnalyzer: ObservableObject {
                 options: [.defaultToSpeaker, .allowBluetooth]
             )
 #endif
+            // 让 AVAudioSession 与 AudioKit 的 Settings.sampleRate 保持一致，
+            // 避免激活后 input format 报告 sampleRate=0 或与下游 tap 的通道格式不匹配。
+            // 这两个调用都是 best-effort：硬件可能强制使用其它值，但提示一致目标能显著提升稳定性。
+            try? session.setPreferredSampleRate(Settings.sampleRate)
+            try? session.setPreferredIOBufferDuration(0.005)   // ~5ms，平衡延迟与稳定性
             try session.setActive(true)
             return true
         } catch {
