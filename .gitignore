@@ -14,7 +14,8 @@ xcuserdata/
 # ── Swift Package Manager ───────────────────────────────
 .build/
 .swiftpm/xcode/
-AudioKit/          # SPM 本地依赖缓存，不入库
+# AudioKit 改为远程 SPM 依赖后，本地目录若存在可忽略
+AudioKit/
 # Package.resolved 保留，方便复现依赖版本
 # *.resolved
 
