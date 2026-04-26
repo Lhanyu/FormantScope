@@ -31,7 +31,13 @@ final class AudioAnalyzer: ObservableObject {
     // MARK: - Noise gate
 
     /// 振幅低于此阈值时视为静音（PitchTap / AUBIO 归一化幅度）。
-    static let amplitudeThreshold: Float = 0.15
+    static var amplitudeThreshold: Float {
+#if os(iOS)
+        0.10
+#else
+        0.15
+#endif
+    }
     static let minPitch: Float = 50.0
     static let maxPitch: Float = 1_200.0
     /// 从静音进入有声态所需的连续帧数（onset）。
@@ -40,6 +46,10 @@ final class AudioAnalyzer: ObservableObject {
     /// F0 显示保持帧数（offset hysteresis）：确认的 F0 消失后，再保持这么多帧再断线。
     /// ~450 ms 足以跨越大多数清辅音（/p/ /t/ /k/ 闭塞段约 50–150 ms）。
     private static let maxPitchHoldFrames: Int = 5
+    /// 相邻帧允许的最大 F0 变化。超过后不立刻采纳，先作为“可疑突变”观察。
+    private static let maxPitchDeltaPerFrame: Float = 200
+    /// 大跳变至少连续出现这么多帧才接受，抑制咽气/口水等瞬态毛刺。
+    private static let pitchJumpConfirmationFrames: Int = 2
 
     // MARK: - LPC parameters
 
@@ -58,7 +68,13 @@ final class AudioAnalyzer: ObservableObject {
     private static let spectrumPoints = 512
 
     /// 原始 PCM RMS 门限，独立于 AUBIO 归一化幅度，用于过滤真正的静音帧。
-    private static let rmsThreshold: Float = 0.005
+    private static var rmsThreshold: Float {
+#if os(iOS)
+        0.0035
+#else
+        0.005
+#endif
+    }
 
     /// 共振峰搜索范围：包含 F1（200 Hz 起）以确保 F2 能正确排在第二位。
     private static let formantSearchMin: Float = 200
@@ -76,6 +92,8 @@ final class AudioAnalyzer: ObservableObject {
     private let engine = AudioEngine()
     private var pitchTap: PitchTap?
     private var rawDataTap: RawDataTap?
+    private var hasBuiltGraph = false
+    private var isRunning = false
 
     /// LPC 计算专用后台队列，避免阻塞主线程。
     private let lpcQueue = DispatchQueue(label: "com.voicetool.lpc", qos: .userInteractive)
@@ -84,6 +102,9 @@ final class AudioAnalyzer: ObservableObject {
     /// F0 显示保持：上次确认的音高值，onset 结束后继续展示 maxPitchHoldFrames 帧。
     private var lastConfirmedPitch: Float = 0
     private var pitchHoldCount: Int = 0
+    /// 可疑大跳变候选值与累计帧数：用于“连续确认后再切换”。
+    private var pendingJumpPitch: Float = 0
+    private var pendingJumpCount: Int = 0
 
     /// 静音 Fader：AudioEngine 必须设置 output 才能让 tap 正常触发。
     private var silence: Fader?
@@ -118,12 +139,25 @@ final class AudioAnalyzer: ObservableObject {
     // MARK: - Init
 
     init() {
+#if os(iOS)
+        // iOS（尤其是模拟器）在 AVAudioSession 激活前常拿到无效 input format（sampleRate = 0）。
+        // 因此延迟到 start()（会话激活之后）再构建音频图。
+#else
         buildGraph()
+#endif
     }
 
     // MARK: - Graph construction
 
     private func buildGraph() {
+        // 重建前先清理旧 tap，避免重复 installTap。
+        pitchTap?.stop()
+        rawDataTap?.stop()
+        pitchTap = nil
+        rawDataTap = nil
+        tapMixer = nil
+        silence = nil
+
         guard let mic = engine.input else {
             print("[AudioAnalyzer] 麦克风输入不可用")
             return
@@ -162,14 +196,50 @@ final class AudioAnalyzer: ObservableObject {
             // 目的：跨越辅音（/p/ /t/ /k/ 等）时 F0 曲线不出现短暂缺口。
             let displayPitch: Float?
             if confirmed {
-                self.lastConfirmedPitch = currentPitch
-                displayPitch = currentPitch
+                let acceptedPitch: Float
+
+                if self.lastConfirmedPitch > 0 {
+                    let delta = abs(currentPitch - self.lastConfirmedPitch)
+                    if delta > Self.maxPitchDeltaPerFrame {
+                        // 大跳变：先观察，只有连续多帧都落在同一新频段才切换过去。
+                        if self.pendingJumpCount > 0,
+                           abs(currentPitch - self.pendingJumpPitch) <= Self.maxPitchDeltaPerFrame {
+                            self.pendingJumpCount += 1
+                        } else {
+                            self.pendingJumpPitch = currentPitch
+                            self.pendingJumpCount = 1
+                        }
+
+                        if self.pendingJumpCount >= Self.pitchJumpConfirmationFrames {
+                            acceptedPitch = self.pendingJumpPitch
+                            self.pendingJumpPitch = 0
+                            self.pendingJumpCount = 0
+                        } else {
+                            acceptedPitch = self.lastConfirmedPitch
+                        }
+                    } else {
+                        // 正常连续变化，清空突变候选。
+                        self.pendingJumpPitch = 0
+                        self.pendingJumpCount = 0
+                        acceptedPitch = currentPitch
+                    }
+                } else {
+                    // 首次进入确认态，直接接受。
+                    self.pendingJumpPitch = 0
+                    self.pendingJumpCount = 0
+                    acceptedPitch = currentPitch
+                }
+
+                self.lastConfirmedPitch = acceptedPitch
+                displayPitch = acceptedPitch
             } else if self.lastConfirmedPitch > 0,
                       self.pitchHoldCount < Self.maxPitchHoldFrames {
                 self.pitchHoldCount += 1
                 displayPitch = self.lastConfirmedPitch  // 保持上一帧值
             } else {
                 self.lastConfirmedPitch = 0
+                self.pendingJumpPitch = 0
+                self.pendingJumpCount = 0
                 displayPitch = nil
             }
 
@@ -191,29 +261,46 @@ final class AudioAnalyzer: ObservableObject {
         rawDataTap = RawDataTap(mixer, bufferSize: 4_096, callbackQueue: lpcQueue) { [weak self] samples in
             self?.processLPC(samples)
         }
+        hasBuiltGraph = true
     }
 
     // MARK: - Lifecycle
 
-    func start() {
+    @discardableResult
+    func start() -> Bool {
+        guard !isRunning else { return true }
 #if os(iOS)
-        configureAudioSession()
+        guard configureAudioSession() else { return false }
+        if !hasBuiltGraph { buildGraph() }
+#elseif os(macOS)
+        if !hasBuiltGraph { buildGraph() }
 #endif
+        guard hasBuiltGraph else {
+            print("[AudioAnalyzer] 音频图尚未构建，无法启动")
+            return false
+        }
         do {
             try engine.start()
             pitchTap?.start()
             rawDataTap?.start()
+            isRunning = true
+            return true
         } catch {
             print("[AudioAnalyzer] 引擎启动失败：\(error)")
+            return false
         }
     }
 
     func stop() {
+        guard isRunning else { return }
         pitchTap?.stop()
         rawDataTap?.stop()
         engine.stop()
+        // 清理渲染状态，提升 iOS 上重复启停稳定性（不破坏现有连接图）。
+        engine.avEngine.reset()
+        isRunning = false
 #if os(iOS)
-        try? AVAudioSession.sharedInstance().setActive(false)
+        // 不在每次 stop 后立刻 setActive(false)，避免频繁路由重配置引发通道格式不一致。
 #endif
     }
 
@@ -460,22 +547,32 @@ final class AudioAnalyzer: ObservableObject {
     // MARK: - iOS Audio Session
 
 #if os(iOS)
-    private func configureAudioSession() {
+    private func configureAudioSession() -> Bool {
         do {
             let session = AVAudioSession.sharedInstance()
+#if targetEnvironment(simulator)
+            // 模拟器经常出现 I/O 重配置，使用 record 模式更稳定（无需扬声器回放）。
+            try session.setCategory(.record, mode: .measurement, options: [])
+#else
             try session.setCategory(
                 .playAndRecord,
                 mode: .measurement,
                 options: [.defaultToSpeaker, .allowBluetooth]
             )
+#endif
             try session.setActive(true)
+            return true
         } catch {
             print("[AudioAnalyzer] AVAudioSession 配置失败：\(error)")
+            return false
         }
     }
 #endif
 
     deinit {
         stop()
+#if os(iOS)
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+#endif
     }
 }

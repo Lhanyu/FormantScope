@@ -53,8 +53,12 @@ struct ContentView: View {
 
                 // 启停按钮
                 Button {
-                    isRunning ? analyzer.stop() : analyzer.start()
-                    isRunning.toggle()
+                    if isRunning {
+                        analyzer.stop()
+                        isRunning = false
+                    } else {
+                        isRunning = analyzer.start()
+                    }
                 } label: {
                     Label(
                         isRunning ? "停止监听" : "开始监听",
