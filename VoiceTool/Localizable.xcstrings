@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Display" : {
+
+    },
     "F0 Fundamental" : {
       "localizations" : {
         "zh-Hans" : {
@@ -31,16 +34,37 @@
         }
       }
     },
+    "Formant Axis – F1 / F2" : {
+
+    },
     "Frame" : {
 
     },
     "Hz" : {
 
     },
+    "Max" : {
+
+    },
+    "Min" : {
+
+    },
     "n" : {
 
     },
+    "Pitch Axis" : {
+
+    },
+    "Reset to Defaults" : {
+
+    },
     "s" : {
+
+    },
+    "Show F1 Formant" : {
+
+    },
+    "Show F2 Formant" : {
 
     },
     "Start Listening" : {

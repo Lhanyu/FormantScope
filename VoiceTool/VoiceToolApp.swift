@@ -14,17 +14,43 @@ struct VoiceToolApp: App {
     }
 
     var body: some Scene {
+#if os(macOS)
         WindowGroup {
             ContentView()
-#if os(macOS)
                 .frame(minWidth: 360, minHeight: 420)
-#endif
         }
-#if os(macOS)
         .defaultSize(width: 420, height: 660)
+        .commands { DisplayCommands() }
+
+        Settings {
+            SettingsView()
+        }
+#else
+        WindowGroup {
+            ContentView()
+        }
 #endif
     }
 }
+
+// MARK: - macOS 菜单命令
+
+#if os(macOS)
+/// 在 View 菜单末尾追加 F1/F2 显示开关，带快捷键。
+private struct DisplayCommands: Commands {
+    @AppStorage("showF1") var showF1: Bool = true
+    @AppStorage("showF2") var showF2: Bool = true
+
+    var body: some Commands {
+        CommandGroup(after: .sidebar) {
+            Toggle("Show F1 Formant", isOn: $showF1)
+                .keyboardShortcut("1", modifiers: [.command, .option])
+            Toggle("Show F2 Formant", isOn: $showF2)
+                .keyboardShortcut("2", modifiers: [.command, .option])
+        }
+    }
+}
+#endif
 
 // MARK: - stderr 噪声过滤
 

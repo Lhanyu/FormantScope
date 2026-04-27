@@ -18,6 +18,18 @@ struct ContentView: View {
     /// 超出 [0,1] 的部分自然往整屏上下溢出（曲线越界变"探出主区"的 geek 效果）。
     @State private var cardFrame: CGRect = .zero
 
+    // MARK: 持久化设置
+    @AppStorage("showF1")  private var showF1:  Bool   = true
+    @AppStorage("showF2")  private var showF2:  Bool   = true
+    @AppStorage("f0Min")   private var f0Min:   Double = 50
+    @AppStorage("f0Max")   private var f0Max:   Double = 600
+    @AppStorage("fmtMin")  private var fmtMin:  Double = 200
+    @AppStorage("fmtMax")  private var fmtMax:  Double = 3_500
+
+#if os(iOS)
+    @State private var showSettings = false
+#endif
+
     var body: some View {
         // 最外层 GeometryReader：第一帧就能拿到真实窗口尺寸，
         // 避免用 @State 默认值 + PreferenceKey 回调的"两帧"方案带来的初始错位。
@@ -39,7 +51,13 @@ struct ContentView: View {
                     f1History:    analyzer.f1History,
                     f2History:    analyzer.f2History,
                     cardFrame:    cardFrame,
-                    rootSize:     geo.size
+                    rootSize:     geo.size,
+                    showF1:       showF1,
+                    showF2:       showF2,
+                    f0Min:        f0Min,
+                    f0Max:        f0Max,
+                    fmtMin:       fmtMin,
+                    fmtMax:       fmtMax
                 )
 
                 // ===== Layer 1：主区卡片底色 =====
@@ -62,21 +80,23 @@ struct ContentView: View {
                             color: .red
                         )
 
-                        Divider().frame(height: dividerHeight)
+                        if showF1 {
+                            Divider().frame(height: dividerHeight)
+                            FrequencyReadout(
+                                label: "F1 Formant",
+                                value: analyzer.f1,
+                                color: .blue
+                            )
+                        }
 
-                        FrequencyReadout(
-                            label: "F1 Formant",
-                            value: analyzer.f1,
-                            color: .blue
-                        )
-
-                        Divider().frame(height: dividerHeight)
-
-                        FrequencyReadout(
-                            label: "F2 Formant",
-                            value: analyzer.f2,
-                            color: .green
-                        )
+                        if showF2 {
+                            Divider().frame(height: dividerHeight)
+                            FrequencyReadout(
+                                label: "F2 Formant",
+                                value: analyzer.f2,
+                                color: .green
+                            )
+                        }
                     }
 
                     Spacer().frame(height: spacerReadoutToChart)
@@ -128,6 +148,29 @@ struct ContentView: View {
             .coordinateSpace(name: "rootSpace")
             .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
             .onAppear { requestMicrophonePermission() }
+#if os(iOS)
+            // iOS 设置入口：右上角齿轮按钮
+            .overlay(alignment: .topTrailing) {
+                Button { showSettings = true } label: {
+                    Image(systemName: "gearshape.fill")
+                        .font(.title2)
+                        .padding(14)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                NavigationStack {
+                    SettingsView()
+                        .navigationTitle("Settings")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { showSettings = false }
+                            }
+                        }
+                }
+            }
+#endif
         }
     }
 
@@ -196,6 +239,7 @@ private struct FrequencyReadout: View {
                 .font(.system(size: 14, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
         }
+        .textSelection(.enabled)
     }
 }
 
@@ -259,22 +303,51 @@ private struct BackgroundVoiceChart: View {
     let cardFrame: CGRect
     /// ZStack 根容器尺寸，用来计算 Y 域上下沿对应屏幕顶/底的归一化值
     let rootSize:  CGSize
+    /// 控制 F1/F2 折线与右轴的可见性
+    let showF1:  Bool
+    let showF2:  Bool
+    /// 用户可配置的轴范围（Hz）
+    let f0Min:   Double
+    let f0Max:   Double
+    let fmtMin:  Double
+    let fmtMax:  Double
 
-    // MARK: - 频率范围
+    // MARK: - 归一化（实例方法，使用传入的轴范围）
 
-    private static let f0Min: Double = 50,    f0Max: Double = 600
-    /// F1/F2 共享同一归一化轴：200–3500 Hz，F1 在下段，F2 在中上段。
-    private static let fmtMin: Double = 200,  fmtMax: Double = 3_500
+    private func normF0(_ hz: Double)  -> Double { (hz - f0Min)  / (f0Max  - f0Min)  }
+    private func normFmt(_ hz: Double) -> Double { (hz - fmtMin) / (fmtMax - fmtMin) }
 
-    private static func normF0(_ hz: Double) -> Double { (hz - f0Min) / (f0Max - f0Min) }
-    private static func normFmt(_ hz: Double) -> Double { (hz - fmtMin) / (fmtMax - fmtMin) }
+    // MARK: - 刻度候选集（Hz + 显示文本）
 
-    private static let f0NormTicks:  [Double] = [100, 200, 300, 400, 500].map(normF0)
-    private static let f0Labels:     [String] = ["100", "200", "300", "400", "500"]
+    private struct AxisTick {
+        let norm:  Double
+        let label: String
+    }
 
-    /// 右轴刻度同时服务 F1（低段）和 F2（中高段），选取能覆盖两者的均匀点。
-    private static let fmtNormTicks: [Double] = [300, 500, 1_000, 1_500, 2_000, 2_500, 3_000].map(normFmt)
-    private static let fmtLabels:    [String] = ["300", "500", "1k", "1.5k", "2k", "2.5k", "3k"]
+    /// 从候选 Hz 列表中过滤出落在 (min, max) 内的刻度，并映射到归一化坐标。
+    private static func makeTicks(_ candidates: [(Double, String)],
+                                   min: Double, max: Double,
+                                   norm: (Double) -> Double) -> [AxisTick] {
+        candidates
+            .filter { $0.0 > min && $0.0 < max }
+            .map    { AxisTick(norm: norm($0.0), label: $0.1) }
+    }
+
+    private var f0Ticks: [AxisTick] {
+        Self.makeTicks(
+            [(50,"50"),(100,"100"),(150,"150"),(200,"200"),(250,"250"),
+             (300,"300"),(350,"350"),(400,"400"),(450,"450"),(500,"500"),(550,"550")],
+            min: f0Min, max: f0Max, norm: normF0)
+    }
+
+    private var fmtTicks: [AxisTick] {
+        Self.makeTicks(
+            [(300,"300"),(500,"500"),(700,"700"),(1_000,"1k"),
+             (1_500,"1.5k"),(2_000,"2k"),(2_500,"2.5k"),(3_000,"3k"),(3_500,"3.5k")],
+            min: fmtMin, max: fmtMax, norm: normFmt)
+    }
+
+    // MARK: - 数据点构造
 
     private struct DataPoint: Identifiable {
         let id: Int
@@ -286,7 +359,7 @@ private struct BackgroundVoiceChart: View {
     /// 构造数据点：保持原有的 nil 分段逻辑，但不再把 norm clamp 到 [0,1]，
     /// 而是 clamp 到当前扩展 Y 域，让超量程值仍可见且不会被裁出图表 frame。
     private func makePoints(_ history: [Float?],
-                            norm: @escaping (Double) -> Double,
+                            norm: (Double) -> Double,
                             yMin: Double,
                             yMax: Double) -> [DataPoint] {
         var result: [DataPoint] = []
@@ -295,30 +368,25 @@ private struct BackgroundVoiceChart: View {
         for (index, value) in history.enumerated() {
             guard let f = value else { prevWasNil = true; continue }
             if prevWasNil { segmentID += 1 }
-            let raw = norm(Double(f))
-            let n = max(yMin, min(yMax, raw))
+            let n = max(yMin, min(yMax, norm(Double(f))))
             result.append(DataPoint(id: index, index: index, norm: n, segment: segmentID))
             prevWasNil = false
         }
         return result
     }
 
+    // MARK: - Body
+
     var body: some View {
-        // 即便 cardFrame 尚未上报（首帧）也照常渲染：用 [0,1] 兜底，相当于退化成
-        // "没有溢出区"的旧行为。一旦 PreferenceKey 把 cardFrame 推上来，body 会
-        // 重新计算扩展 Y 域，曲线就会自然延展到整屏。
         chartView
     }
 
     /// Y 域映射：
     ///   plot Y = 1 ↔ 屏幕 y = cardFrame.minY（主区顶）
     ///   plot Y = 0 ↔ 屏幕 y = cardFrame.maxY（主区底）
-    ///   线性映射: plotY = (cardFrame.maxY - screenY) / cardFrame.height
     /// 当 cardFrame 尚未就绪时退回 [0,1]。
     private var yDomain: (min: Double, max: Double) {
-        guard cardFrame.height > 1, rootSize.height > 1 else {
-            return (0, 1)
-        }
+        guard cardFrame.height > 1, rootSize.height > 1 else { return (0, 1) }
         let yMax = Double(cardFrame.maxY) / Double(cardFrame.height)
         let yMin = Double(cardFrame.maxY - rootSize.height) / Double(cardFrame.height)
         return (yMin, yMax)
@@ -328,56 +396,59 @@ private struct BackgroundVoiceChart: View {
     private var chartView: some View {
         let (yMin, yMax) = (yDomain.min, yDomain.max)
 
-        let f0Pts = makePoints(pitchHistory, norm: Self.normF0,  yMin: yMin, yMax: yMax)
-        let f1Pts = makePoints(f1History,    norm: Self.normFmt, yMin: yMin, yMax: yMax)
-        let f2Pts = makePoints(f2History,    norm: Self.normFmt, yMin: yMin, yMax: yMax)
+        let f0Pts  = makePoints(pitchHistory, norm: normF0,  yMin: yMin, yMax: yMax)
+        let f1Pts  = makePoints(f1History,    norm: normFmt, yMin: yMin, yMax: yMax)
+        let f2Pts  = makePoints(f2History,    norm: normFmt, yMin: yMin, yMax: yMax)
+
+        // 刻度 norm 数组供 AxisMarks(values:) 使用
+        let f0Norms  = f0Ticks.map(\.norm)
+        let fmtNorms = fmtTicks.map(\.norm)
 
         Chart {
-            // F0 — 红色实线
+            // F0 — 红色实线（始终显示）
             ForEach(f0Pts) { p in
-                LineMark(
-                    x: .value("Frame", p.index),
-                    y: .value("n", p.norm),
-                    series: .value("s", "f0-\(p.segment)")
-                )
+                LineMark(x: .value("Frame", p.index),
+                         y: .value("n", p.norm),
+                         series: .value("s", "f0-\(p.segment)"))
                 .interpolationMethod(.monotone)
                 .foregroundStyle(.red)
                 .lineStyle(StrokeStyle(lineWidth: 2))
             }
-            // F1 — 蓝色实线
-            ForEach(f1Pts) { p in
-                LineMark(
-                    x: .value("Frame", p.index),
-                    y: .value("n", p.norm),
-                    series: .value("s", "f1-\(p.segment)")
-                )
-                .interpolationMethod(.monotone)
-                .foregroundStyle(.blue)
-                .lineStyle(StrokeStyle(lineWidth: 2))
+
+            // F1 — 蓝色实线（可隐藏）
+            if showF1 {
+                ForEach(f1Pts) { p in
+                    LineMark(x: .value("Frame", p.index),
+                             y: .value("n", p.norm),
+                             series: .value("s", "f1-\(p.segment)"))
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(.blue)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+                }
             }
-            // F2 — 绿色虚线
-            ForEach(f2Pts) { p in
-                LineMark(
-                    x: .value("Frame", p.index),
-                    y: .value("n", p.norm),
-                    series: .value("s", "f2-\(p.segment)")
-                )
-                .interpolationMethod(.monotone)
-                .foregroundStyle(.green)
-                .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
+
+            // F2 — 绿色虚线（可隐藏）
+            if showF2 {
+                ForEach(f2Pts) { p in
+                    LineMark(x: .value("Frame", p.index),
+                             y: .value("n", p.norm),
+                             series: .value("s", "f2-\(p.segment)"))
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(.green)
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                }
             }
         }
         .chartXScale(domain: 0 ... 99)
         .chartYScale(domain: yMin ... yMax)
-        // 不画 X 网格：避免在主区外的溢出区段也出现密集竖线，污染整屏背景
         .chartXAxis(.hidden)
         .chartYAxis {
-            // 左轴：F0 刻度（红色）+ 网格线 —— 刻度值都在 [0,1]，所以仅在主区内显示
-            AxisMarks(position: .leading, values: Self.f0NormTicks) { val in
+            // 左轴：F0 刻度（红色）+ 网格线
+            AxisMarks(position: .leading, values: f0Norms) { val in
                 AxisValueLabel {
                     if let v = val.as(Double.self),
-                       let i = Self.f0NormTicks.firstIndex(where: { abs($0 - v) < 0.001 }) {
-                        Text(Self.f0Labels[i])
+                       let tick = f0Ticks.first(where: { abs($0.norm - v) < 1e-6 }) {
+                        Text(tick.label)
                             .font(.system(size: 9))
                             .foregroundStyle(.red.opacity(0.8))
                     }
@@ -385,20 +456,23 @@ private struct BackgroundVoiceChart: View {
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
                     .foregroundStyle(Color.secondary.opacity(0.15))
             }
-            // 右轴：F1/F2 共轴刻度（F1 蓝色在下段，F2 绿色在中上段，刻度统一显示）
-            AxisMarks(position: .trailing, values: Self.fmtNormTicks) { val in
-                AxisValueLabel {
-                    if let v = val.as(Double.self),
-                       let i = Self.fmtNormTicks.firstIndex(where: { abs($0 - v) < 0.001 }) {
-                        Text(Self.fmtLabels[i])
-                            .font(.system(size: 9))
-                            .foregroundStyle(Color.secondary.opacity(0.6))
+
+            // 右轴：Formant 刻度（F1/F2 共轴）—— F1 或 F2 至少一个可见时才显示
+            if showF1 || showF2 {
+                AxisMarks(position: .trailing, values: fmtNorms) { val in
+                    AxisValueLabel {
+                        if let v = val.as(Double.self),
+                           let tick = fmtTicks.first(where: { abs($0.norm - v) < 1e-6 }) {
+                            Text(tick.label)
+                                .font(.system(size: 9))
+                                .foregroundStyle(Color.secondary.opacity(0.6))
+                        }
                     }
                 }
             }
         }
-        .padding(.horizontal, 24)   // 与前景 placeholder 对齐宽度
-        .allowsHitTesting(false)    // 后景层不响应触摸，避免拦住按钮
+        .padding(.horizontal, 24)
+        .allowsHitTesting(false)
     }
 }
 
