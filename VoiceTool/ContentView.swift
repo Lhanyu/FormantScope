@@ -415,7 +415,7 @@ private struct BackgroundVoiceChart: View {
                 .lineStyle(StrokeStyle(lineWidth: 2))
             }
 
-            // F1 — 蓝色实线（可隐藏）
+            // F1 — 蓝色虚线（可隐藏）
             if showF1 {
                 ForEach(f1Pts) { p in
                     LineMark(x: .value("Frame", p.index),
@@ -423,7 +423,7 @@ private struct BackgroundVoiceChart: View {
                              series: .value("s", "f1-\(p.segment)"))
                     .interpolationMethod(.monotone)
                     .foregroundStyle(.blue)
-                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
                 }
             }
 
