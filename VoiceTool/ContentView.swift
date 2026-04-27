@@ -54,7 +54,7 @@ struct ContentView: View {
                 // 频率数字显示区：F0 + F2 并排
                 HStack(spacing: 32) {
                     FrequencyReadout(
-                        label: "F0 基频",
+                        label: "F0 Fundamental",
                         value: analyzer.pitch,
                         color: .red
                     )
@@ -62,7 +62,7 @@ struct ContentView: View {
                     Divider().frame(height: 60)
 
                     FrequencyReadout(
-                        label: "F2 共振峰",
+                        label: "F2 Formant",
                         value: analyzer.f2,
                         color: .green
                     )
@@ -105,7 +105,7 @@ struct ContentView: View {
                     }
                 } label: {
                     Label(
-                        isRunning ? "停止监听" : "开始监听",
+                        isRunning ? "Stop Listening" : "Start Listening",
                         systemImage: isRunning ? "stop.circle.fill" : "mic.circle.fill"
                     )
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
@@ -166,7 +166,7 @@ private struct CardFrameKey: PreferenceKey {
 
 /// 单个频率参数的数字显示组件（标签 + 数值 + 单位）。
 private struct FrequencyReadout: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: Float
     let color: Color
 
@@ -326,7 +326,7 @@ private struct BackgroundVoiceChart: View {
             // F0 — 红色实线
             ForEach(f0Pts) { p in
                 LineMark(
-                    x: .value("帧", p.index),
+                    x: .value("Frame", p.index),
                     y: .value("n", p.norm),
                     series: .value("s", "f0-\(p.segment)")
                 )
@@ -337,7 +337,7 @@ private struct BackgroundVoiceChart: View {
             // F2 — 绿色虚线
             ForEach(f2Pts) { p in
                 LineMark(
-                    x: .value("帧", p.index),
+                    x: .value("Frame", p.index),
                     y: .value("n", p.norm),
                     series: .value("s", "f2-\(p.segment)")
                 )

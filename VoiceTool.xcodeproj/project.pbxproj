@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		7E04724E2F9D067000A91052 /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E04724D2F9D067000A91052 /* AudioKit */; };
 		7E04725D2F9D085F00A91052 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7E0472582F9D085F00A91052 /* Assets.xcassets */; };
+		7E047290AAAA000100A91052 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7E04728FAAAA000100A91052 /* Localizable.xcstrings */; };
 		7E04725E2F9D085F00A91052 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0472592F9D085F00A91052 /* ContentView.swift */; };
 		7E04725F2F9D085F00A91052 /* VoiceToolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */; };
 		7E0472622F9D0DED00A91052 /* CSoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472612F9D0DED00A91052 /* CSoundpipeAudioKit */; };
@@ -43,6 +44,7 @@
 		7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceToolApp.swift; sourceTree = "<group>"; };
 		7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAnalyzer.swift; sourceTree = "<group>"; };
 		7E77D7A42F9E019C00B47540 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7E04728FAAAA000100A91052 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -113,6 +115,7 @@
 				7E0472582F9D085F00A91052 /* Assets.xcassets */,
 				7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */,
 				7E0472592F9D085F00A91052 /* ContentView.swift */,
+				7E04728FAAAA000100A91052 /* Localizable.xcstrings */,
 				7E04725A2F9D085F00A91052 /* VoiceTool.entitlements */,
 				7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */,
 			);
@@ -219,6 +222,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = 7E0472042F9D01EB00A91052;
 			minimizedProjectReferenceProxies = 1;
@@ -244,6 +248,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E04725D2F9D085F00A91052 /* Assets.xcassets in Resources */,
+				7E047290AAAA000100A91052 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

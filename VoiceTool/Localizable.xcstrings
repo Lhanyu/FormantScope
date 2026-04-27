@@ -1,0 +1,58 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "F0 Fundamental" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "F0 基频"
+          }
+        }
+      }
+    },
+    "F2 Formant" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "F2 共振峰"
+          }
+        }
+      }
+    },
+    "Frame" : {
+
+    },
+    "Hz" : {
+
+    },
+    "n" : {
+
+    },
+    "s" : {
+
+    },
+    "Start Listening" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始监听"
+          }
+        }
+      }
+    },
+    "Stop Listening" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止监听"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
