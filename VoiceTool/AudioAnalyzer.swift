@@ -39,9 +39,18 @@ final class AudioAnalyzer: ObservableObject {
     /// 振幅低于此阈值时视为静音（PitchTap / AUBIO 归一化幅度）。
     static var amplitudeThreshold: Float {
 #if os(iOS)
-        0.10
+        0.08
 #else
         0.15
+#endif
+    }
+    /// iOS 内置麦克风在 measurement 模式下幅度读数通常明显低于 macOS。
+    /// 这里仅补偿 PitchTap 的门控与 UI 幅度显示，不改变原始 PCM / LPC 数据。
+    private static var amplitudeDisplayGain: Float {
+#if os(iOS)
+        2.0
+#else
+        1.0
 #endif
     }
     static let minPitch: Float = 50.0
@@ -78,7 +87,7 @@ final class AudioAnalyzer: ObservableObject {
     /// 原始 PCM RMS 门限，独立于 AUBIO 归一化幅度，用于过滤真正的静音帧。
     private static var rmsThreshold: Float {
 #if os(iOS)
-        0.0035
+        0.0025
 #else
         0.005
 #endif
@@ -196,7 +205,8 @@ final class AudioAnalyzer: ObservableObject {
             // AUBIO 在静音/瞬态首帧偶尔返回空数组，直接 [0] 下标会崩溃。
             guard let currentPitch = pitches.first, let currentAmp = amps.first else { return }
 
-            let isVoice = currentAmp   >= Self.amplitudeThreshold
+            let displayAmp = min(currentAmp * Self.amplitudeDisplayGain, 1.0)
+            let isVoice = displayAmp   >= Self.amplitudeThreshold
                        && currentPitch >= Self.minPitch
                        && currentPitch <= Self.maxPitch
 
@@ -268,8 +278,8 @@ final class AudioAnalyzer: ObservableObject {
             else if displayPitch == nil { self.currentPitchSnapshot = 0 }
             // displayPitch != nil 但 !confirmed（hold 中）：currentPitchSnapshot 保持不变
 
-            self.amplitudeSnapshot    = currentAmp
-            self.amplitude            = currentAmp
+            self.amplitudeSnapshot    = displayAmp
+            self.amplitude            = displayAmp
             self.pitchHistory.removeFirst()
             self.pitchHistory.append(displayPitch)
         }

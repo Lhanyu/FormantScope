@@ -43,6 +43,50 @@ struct ContentView: View {
             let buttonBottomPad:       CGFloat = max(12,  48  * hScale)
             let readoutSpacing:        CGFloat = max(8,   24  * min(hScale, wScale))
             let dividerHeight:         CGFloat = max(32,  60  * hScale)
+#if os(iOS)
+            // 窄屏：列间距与字号同步收紧，避免 F0/F1/F2 三列挤破屏宽。
+            let w = geo.size.width
+            let readoutHSpacing: CGFloat = {
+                if w < 340 { return 2 }
+                if w < 380 { return 4 }
+                if w < 420 { return 6 }
+                return readoutSpacing
+            }()
+            let readoutLabelFont: CGFloat = {
+                if w < 340 { return 9 }
+                if w < 380 { return 10 }
+                if w < 420 { return 11 }
+                return 12
+            }()
+            let readoutValueFont: CGFloat = {
+                if w < 340 { return 32 }
+                if w < 380 { return 36 }
+                if w < 420 { return 40 }
+                return 46
+            }()
+            let readoutUnitFont: CGFloat = {
+                if w < 340 { return 11 }
+                if w < 380 { return 12 }
+                return 14
+            }()
+            let readoutDividerH: CGFloat = {
+                if w < 380 { return max(26, dividerHeight * 0.72) }
+                return dividerHeight
+            }()
+#endif
+#if os(iOS)
+            let readoutStackSpacing = readoutHSpacing
+            let dividerFrameH = readoutDividerH
+            let readoutLabelFontFinal = readoutLabelFont
+            let readoutValueFontFinal = readoutValueFont
+            let readoutUnitFontFinal  = readoutUnitFont
+#else
+            let readoutStackSpacing = readoutSpacing
+            let dividerFrameH = dividerHeight
+            let readoutLabelFontFinal: CGFloat = 12
+            let readoutValueFontFinal: CGFloat = 48
+            let readoutUnitFontFinal: CGFloat  = 14
+#endif
 
             ZStack {
                 // ===== Layer 0：后景全屏图表 =====
@@ -73,31 +117,54 @@ struct ContentView: View {
                 VStack(spacing: 0) {
                     Spacer()
 
-                    HStack(spacing: readoutSpacing) {
+                    HStack(spacing: readoutStackSpacing) {
                         FrequencyReadout(
                             label: "F0 Fundamental",
                             value: analyzer.pitch,
-                            color: .red
+                            color: .red,
+                            labelSize: readoutLabelFontFinal,
+                            valueSize: readoutValueFontFinal,
+                            unitSize: readoutUnitFontFinal
                         )
+                        .frame(maxWidth: .infinity)
+                        .layoutPriority(1)
 
                         if showF1 {
-                            Divider().frame(height: dividerHeight)
+                            Divider()
+                                .frame(height: dividerFrameH)
                             FrequencyReadout(
                                 label: "F1 Formant",
                                 value: analyzer.f1,
-                                color: .blue
+                                color: .blue,
+                                labelSize: readoutLabelFontFinal,
+                                valueSize: readoutValueFontFinal,
+                                unitSize: readoutUnitFontFinal
                             )
+                            .frame(maxWidth: .infinity)
+                            .layoutPriority(1)
                         }
 
                         if showF2 {
-                            Divider().frame(height: dividerHeight)
+                            Divider()
+                                .frame(height: dividerFrameH)
                             FrequencyReadout(
                                 label: "F2 Formant",
                                 value: analyzer.f2,
-                                color: .green
+                                color: .green,
+                                labelSize: readoutLabelFontFinal,
+                                valueSize: readoutValueFontFinal,
+                                unitSize: readoutUnitFontFinal
                             )
+                            .frame(maxWidth: .infinity)
+                            .layoutPriority(1)
                         }
                     }
+                    .frame(maxWidth: .infinity)
+#if os(iOS)
+                    // 只把顶部读数区整体下推，形成与右上角设置入口的竖向间距；
+                    // 不影响三横线垂直位置（整页 VStack 顶部 padding 会把两者一起拖下去）。
+                    .padding(.top, 44)
+#endif
 
                     Spacer().frame(height: spacerReadoutToChart)
 
@@ -149,14 +216,17 @@ struct ContentView: View {
             .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
             .onAppear { requestMicrophonePermission() }
 #if os(iOS)
-            // iOS 设置入口：右上角齿轮按钮
+            // iOS 设置入口：无背景三横线，整体下移，与下方 F0 读数拉开距离。
             .overlay(alignment: .topTrailing) {
                 Button { showSettings = true } label: {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title2)
-                        .padding(14)
-                        .foregroundStyle(.secondary)
+                    Image(systemName: "line.3.horizontal")
+                        .font(.system(size: 30, weight: .light))
+                        .padding(16)
+                        .foregroundStyle(Color.secondary.opacity(0.7))
                 }
+                .buttonStyle(.plain)
+                .padding(.top, 8)
+                .padding(.trailing, 16)
             }
             .sheet(isPresented: $showSettings) {
                 NavigationStack {
@@ -215,6 +285,9 @@ private struct FrequencyReadout: View {
     let label: LocalizedStringKey
     let value: Float
     let color: Color
+    var labelSize: CGFloat = 12
+    var valueSize: CGFloat = 48
+    var unitSize:  CGFloat = 14
 
     private var displayText: String {
         value > 0 ? String(format: "%.0f", value) : "---"
@@ -223,22 +296,29 @@ private struct FrequencyReadout: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(label)
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .font(.system(size: labelSize, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+                .multilineTextAlignment(.center)
 
             Text(displayText)
-                .font(.system(size: 48, weight: .bold, design: .rounded))
+                .font(.system(size: valueSize, weight: .bold, design: .rounded))
                 .monospacedDigit()
-                .minimumScaleFactor(0.4)
+                .minimumScaleFactor(0.28)
                 .lineLimit(1)
+                .multilineTextAlignment(.center)
                 .foregroundStyle(value > 0 ? color : .secondary)
                 .contentTransition(.numericText())
                 .animation(.spring(duration: 0.2), value: value)
 
             Text("Hz")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(.system(size: unitSize, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
+        .frame(maxWidth: .infinity)
         .textSelection(.enabled)
     }
 }
