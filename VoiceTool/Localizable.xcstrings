@@ -11,6 +11,16 @@
         }
       }
     },
+    "F1 Formant" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "F1 共振峰"
+          }
+        }
+      }
+    },
     "F2 Formant" : {
       "localizations" : {
         "zh-Hans" : {

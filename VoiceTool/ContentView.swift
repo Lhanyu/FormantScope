@@ -19,112 +19,115 @@ struct ContentView: View {
     @State private var cardFrame: CGRect = .zero
 
     var body: some View {
-        ZStack {
-            // ===== Layer 0：后景全屏图表 =====
-            // 把 [0,1] Y 域精确贴合 cardFrame 在屏幕中的位置；
-            // 曲线超出 [0,1] 的部分会自然伸到屏幕顶/底，越过读数和能量条所在 Y 区间。
-            // 在 z 序上它处在最底层，所有其他组件都在它之上，不会"挡住"这些组件。
-            GeometryReader { geo in
+        // 最外层 GeometryReader：第一帧就能拿到真实窗口尺寸，
+        // 避免用 @State 默认值 + PreferenceKey 回调的"两帧"方案带来的初始错位。
+        GeometryReader { geo in
+            // MARK: 自适应布局参数（基于真实 geo.size 实时计算）
+            let hScale: CGFloat = max(0.5, min(1.4, geo.size.height / 640))
+            let wScale: CGFloat = max(0.5, min(1.4, geo.size.width  / 400))
+            let chartHeight:           CGFloat = max(120, 320 * hScale)
+            let spacerReadoutToChart:  CGFloat = max(8,   40  * hScale)
+            let spacerChartToBar:      CGFloat = max(4,   12  * hScale)
+            let buttonBottomPad:       CGFloat = max(12,  48  * hScale)
+            let readoutSpacing:        CGFloat = max(8,   24  * min(hScale, wScale))
+            let dividerHeight:         CGFloat = max(32,  60  * hScale)
+
+            ZStack {
+                // ===== Layer 0：后景全屏图表 =====
                 BackgroundVoiceChart(
                     pitchHistory: analyzer.pitchHistory,
+                    f1History:    analyzer.f1History,
                     f2History:    analyzer.f2History,
                     cardFrame:    cardFrame,
                     rootSize:     geo.size
                 )
-            }
 
-            // ===== Layer 1：主区卡片底色 =====
-            // 与 cardFrame 对齐的圆角矩形浅底色，半透明，让后景曲线在主区里也能看见
-            // 但视觉上有一个"主舞台"边界。处于图表线条之上、前景文本之下。
-            if cardFrame.height > 1 {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.secondary.opacity(0.06))
-                    .frame(width: cardFrame.width, height: cardFrame.height)
-                    .position(x: cardFrame.midX, y: cardFrame.midY)
-                    .allowsHitTesting(false)
-            }
-
-            // ===== Layer 2：前景 UI =====
-            // 读数 / 主区 placeholder / 能量条 / 按钮，全部在 ZStack 顶层。
-            // placeholder 用 Color.clear 占位 320pt，并把自身 frame 通过 PreferenceKey
-            // 暴露给后景图表，确保 [0,1] Y 域和这块区域 1:1 对齐。
-            VStack(spacing: 0) {
-                Spacer()
-
-                // 频率数字显示区：F0 + F2 并排
-                HStack(spacing: 32) {
-                    FrequencyReadout(
-                        label: "F0 Fundamental",
-                        value: analyzer.pitch,
-                        color: .red
-                    )
-
-                    Divider().frame(height: 60)
-
-                    FrequencyReadout(
-                        label: "F2 Formant",
-                        value: analyzer.f2,
-                        color: .green
-                    )
+                // ===== Layer 1：主区卡片底色 =====
+                if cardFrame.height > 1 {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.secondary.opacity(0.06))
+                        .frame(width: cardFrame.width, height: cardFrame.height)
+                        .position(x: cardFrame.midX, y: cardFrame.midY)
+                        .allowsHitTesting(false)
                 }
 
-                Spacer().frame(height: 40)
+                // ===== Layer 2：前景 UI =====
+                VStack(spacing: 0) {
+                    Spacer()
 
-                // 主区 placeholder：透明占位 + 上报 frame
-                // 注意：.background 在 .padding 之前 —— 这样上报的 frame 是
-                // padding 内侧的实际可视主区（width = parent - 48），而不是带 padding
-                // 的外框，跟卡片底色和图表 [0,1] 视觉上才能对齐。
-                Color.clear
-                    .frame(height: 320)
-                    .background(
-                        GeometryReader { cardGeo in
-                            Color.clear.preference(
-                                key: CardFrameKey.self,
-                                value: cardGeo.frame(in: .named("rootSpace"))
-                            )
-                        }
-                    )
-                    .padding(.horizontal, 24)
+                    HStack(spacing: readoutSpacing) {
+                        FrequencyReadout(
+                            label: "F0 Fundamental",
+                            value: analyzer.pitch,
+                            color: .red
+                        )
 
-                Spacer().frame(height: 12)
+                        Divider().frame(height: dividerHeight)
 
-                // 幅度指示条（辅助确认麦克风信号）
-                AmplitudeBar(amplitude: analyzer.amplitude)
-                    .frame(height: 8)
-                    .padding(.horizontal, 48)
+                        FrequencyReadout(
+                            label: "F1 Formant",
+                            value: analyzer.f1,
+                            color: .blue
+                        )
 
-                Spacer()
+                        Divider().frame(height: dividerHeight)
 
-                // 启停按钮
-                Button {
-                    if isRunning {
-                        analyzer.stop()
-                        isRunning = false
-                    } else {
-                        isRunning = analyzer.start()
+                        FrequencyReadout(
+                            label: "F2 Formant",
+                            value: analyzer.f2,
+                            color: .green
+                        )
                     }
-                } label: {
-                    Label(
-                        isRunning ? "Stop Listening" : "Start Listening",
-                        systemImage: isRunning ? "stop.circle.fill" : "mic.circle.fill"
-                    )
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+
+                    Spacer().frame(height: spacerReadoutToChart)
+
+                    // 主区 placeholder：上报 frame 给后景图表对齐
+                    Color.clear
+                        .frame(height: chartHeight)
+                        .background(
+                            GeometryReader { cardGeo in
+                                Color.clear.preference(
+                                    key: CardFrameKey.self,
+                                    value: cardGeo.frame(in: .named("rootSpace"))
+                                )
+                            }
+                        )
+                        .padding(.horizontal, 24)
+
+                    Spacer().frame(height: spacerChartToBar)
+
+                    AmplitudeBar(amplitude: analyzer.amplitude)
+                        .frame(height: 8)
+                        .padding(.horizontal, 48)
+
+                    Spacer()
+
+                    Button {
+                        if isRunning {
+                            analyzer.stop()
+                            isRunning = false
+                        } else {
+                            isRunning = analyzer.start()
+                        }
+                    } label: {
+                        Label(
+                            isRunning ? "Stop Listening" : "Start Listening",
+                            systemImage: isRunning ? "stop.circle.fill" : "mic.circle.fill"
+                        )
+                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(isRunning ? .red : .accentColor)
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, buttonBottomPad)
+                    .animation(.easeInOut(duration: 0.2), value: isRunning)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(isRunning ? .red : .accentColor)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 48)
-                .animation(.easeInOut(duration: 0.2), value: isRunning)
             }
-        }
-        .coordinateSpace(name: "rootSpace")
-        .onPreferenceChange(CardFrameKey.self) { rect in
-            cardFrame = rect
-        }
-        .onAppear {
-            requestMicrophonePermission()
+            .coordinateSpace(name: "rootSpace")
+            .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
+            .onAppear { requestMicrophonePermission() }
         }
     }
 
@@ -183,6 +186,8 @@ private struct FrequencyReadout: View {
             Text(displayText)
                 .font(.system(size: 48, weight: .bold, design: .rounded))
                 .monospacedDigit()
+                .minimumScaleFactor(0.4)
+                .lineLimit(1)
                 .foregroundStyle(value > 0 ? color : .secondary)
                 .contentTransition(.numericText())
                 .animation(.spring(duration: 0.2), value: value)
@@ -217,9 +222,9 @@ private struct AmplitudeBar: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                // 背景轨道
+                // 背景轨道：使用 material 而非半透明纯色，确保能遮住底层溢出的图表线
                 Capsule()
-                    .fill(Color.secondary.opacity(0.15))
+                    .fill(.ultraThinMaterial)
 
                 // 渐变始终覆盖全宽，用 mask 裁剪到当前电平 —— 红色永远在满量程右端
                 LinearGradient(
@@ -248,24 +253,28 @@ private struct AmplitudeBar: View {
 private struct BackgroundVoiceChart: View {
 
     let pitchHistory: [Float?]
+    let f1History:    [Float?]
     let f2History:    [Float?]
     /// 主区卡片在 "rootSpace" 坐标系的 frame；高度 0 表示尚未完成首次布局
     let cardFrame: CGRect
     /// ZStack 根容器尺寸，用来计算 Y 域上下沿对应屏幕顶/底的归一化值
     let rootSize:  CGSize
 
-    // MARK: - 频率范围（与原 VoiceChart 一致）
-    private static let f0Min: Double = 50,   f0Max: Double = 600
-    private static let f2Min: Double = 500,  f2Max: Double = 3_500
+    // MARK: - 频率范围
+
+    private static let f0Min: Double = 50,    f0Max: Double = 600
+    /// F1/F2 共享同一归一化轴：200–3500 Hz，F1 在下段，F2 在中上段。
+    private static let fmtMin: Double = 200,  fmtMax: Double = 3_500
 
     private static func normF0(_ hz: Double) -> Double { (hz - f0Min) / (f0Max - f0Min) }
-    private static func normF2(_ hz: Double) -> Double { (hz - f2Min) / (f2Max - f2Min) }
+    private static func normFmt(_ hz: Double) -> Double { (hz - fmtMin) / (fmtMax - fmtMin) }
 
-    private static let f0NormTicks: [Double] = [100, 200, 300, 400, 500].map(normF0)
-    private static let f0Labels:    [String] = ["100", "200", "300", "400", "500"]
+    private static let f0NormTicks:  [Double] = [100, 200, 300, 400, 500].map(normF0)
+    private static let f0Labels:     [String] = ["100", "200", "300", "400", "500"]
 
-    private static let f2NormTicks: [Double] = [700, 1_000, 1_500, 2_000, 2_500, 3_000].map(normF2)
-    private static let f2Labels:    [String] = ["700", "1k", "1.5k", "2k", "2.5k", "3k"]
+    /// 右轴刻度同时服务 F1（低段）和 F2（中高段），选取能覆盖两者的均匀点。
+    private static let fmtNormTicks: [Double] = [300, 500, 1_000, 1_500, 2_000, 2_500, 3_000].map(normFmt)
+    private static let fmtLabels:    [String] = ["300", "500", "1k", "1.5k", "2k", "2.5k", "3k"]
 
     private struct DataPoint: Identifiable {
         let id: Int
@@ -319,8 +328,9 @@ private struct BackgroundVoiceChart: View {
     private var chartView: some View {
         let (yMin, yMax) = (yDomain.min, yDomain.max)
 
-        let f0Pts = makePoints(pitchHistory, norm: Self.normF0, yMin: yMin, yMax: yMax)
-        let f2Pts = makePoints(f2History,    norm: Self.normF2, yMin: yMin, yMax: yMax)
+        let f0Pts = makePoints(pitchHistory, norm: Self.normF0,  yMin: yMin, yMax: yMax)
+        let f1Pts = makePoints(f1History,    norm: Self.normFmt, yMin: yMin, yMax: yMax)
+        let f2Pts = makePoints(f2History,    norm: Self.normFmt, yMin: yMin, yMax: yMax)
 
         Chart {
             // F0 — 红色实线
@@ -332,6 +342,17 @@ private struct BackgroundVoiceChart: View {
                 )
                 .interpolationMethod(.monotone)
                 .foregroundStyle(.red)
+                .lineStyle(StrokeStyle(lineWidth: 2))
+            }
+            // F1 — 蓝色实线
+            ForEach(f1Pts) { p in
+                LineMark(
+                    x: .value("Frame", p.index),
+                    y: .value("n", p.norm),
+                    series: .value("s", "f1-\(p.segment)")
+                )
+                .interpolationMethod(.monotone)
+                .foregroundStyle(.blue)
                 .lineStyle(StrokeStyle(lineWidth: 2))
             }
             // F2 — 绿色虚线
@@ -364,14 +385,14 @@ private struct BackgroundVoiceChart: View {
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
                     .foregroundStyle(Color.secondary.opacity(0.15))
             }
-            // 右轴：F2 刻度（绿色）— 仅标签
-            AxisMarks(position: .trailing, values: Self.f2NormTicks) { val in
+            // 右轴：F1/F2 共轴刻度（F1 蓝色在下段，F2 绿色在中上段，刻度统一显示）
+            AxisMarks(position: .trailing, values: Self.fmtNormTicks) { val in
                 AxisValueLabel {
                     if let v = val.as(Double.self),
-                       let i = Self.f2NormTicks.firstIndex(where: { abs($0 - v) < 0.001 }) {
-                        Text(Self.f2Labels[i])
+                       let i = Self.fmtNormTicks.firstIndex(where: { abs($0 - v) < 0.001 }) {
+                        Text(Self.fmtLabels[i])
                             .font(.system(size: 9))
-                            .foregroundStyle(.green.opacity(0.8))
+                            .foregroundStyle(Color.secondary.opacity(0.6))
                     }
                 }
             }

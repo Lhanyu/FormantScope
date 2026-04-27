@@ -16,7 +16,13 @@ struct VoiceToolApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+#if os(macOS)
+                .frame(minWidth: 360, minHeight: 420)
+#endif
         }
+#if os(macOS)
+        .defaultSize(width: 420, height: 660)
+#endif
     }
 }
 
@@ -25,6 +31,11 @@ struct VoiceToolApp: App {
 /// CoreAudio / XPC 产生的 NSXPCDecoder 警告走 NSLog → stderr（*** 开头），
 /// 无法通过 OS_ACTIVITY_DT_MODE 抑制。此函数将 stderr 接入过滤管道：
 /// 含噪声关键词的行直接丢弃，其余行写回原始 stderr，print() 走 stdout 完全不受影响。
+///
+/// 注意：AudioEngine start/stop 时产生的 os_log 走统一日志系统，不经过 stderr，
+/// 需在 Xcode scheme → Run → Arguments → Environment Variables 中加入：
+///   OS_ACTIVITY_MODE = disable
+/// 来抑制 Xcode 控制台里的 os_log 洪流，这里的管道对其无效。
 private func suppressCoreAudioXPCNoise() {
     // 保存原始 stderr 文件描述符
     let origFd = dup(STDERR_FILENO)
@@ -56,13 +67,15 @@ private func suppressCoreAudioXPCNoise() {
                 let lineData = Data(pending[pending.startIndex ..< end])
                 let line     = String(bytes: lineData, encoding: .utf8) ?? ""
 
-                let isNoise  = line.contains("NSXPCDecoder")
+                let trimmed  = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                let isNoise  = trimmed.isEmpty                                // 空行
+                            || trimmed == "{("                                 // XPC 数组括号
+                            || trimmed == ")}"
+                            || line.contains("NSXPCDecoder")
                             || line.contains("NSSecureCoding")
                             || line.contains("bad range for [%{public}@]")
                             || line.contains("Allowed class list")
                             || line.contains("'NSObject'")
-                            || line.trimmingCharacters(in: .whitespaces) == "{("
-                            || line.trimmingCharacters(in: .whitespaces) == ")}"
                 if !isNoise { origOut.write(lineData) }
 
                 pending.removeSubrange(pending.startIndex ..< end)

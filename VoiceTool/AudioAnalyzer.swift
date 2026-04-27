@@ -22,6 +22,12 @@ final class AudioAnalyzer: ObservableObject {
     /// 最近 100 帧的音高历史。nil 表示静音帧，Charts 遇到 nil 会自动断开线条。
     @Published var pitchHistory: [Float?] = Array(repeating: nil, count: 100)
 
+    /// 当前检测到的第一共振峰（Hz）。0 表示无有效信号。
+    @Published var f1: Float = 0.0
+
+    /// 最近 100 帧的 F1 历史。nil 表示静音帧或 LPC 未找到有效 F1。
+    @Published var f1History: [Float?] = Array(repeating: nil, count: 100)
+
     /// 当前检测到的第二共振峰（Hz）。0 表示无有效信号。
     @Published var f2: Float = 0.0
 
@@ -125,6 +131,16 @@ final class AudioAnalyzer: ObservableObject {
     /// PitchTap 最新的原始幅度快照（未经防抖），用于低 F0 场景下的备用声态门控。
     /// 当 F0 低（~100 Hz）时，3 帧防抖会频繁将 pitch 清零，但 amplitude 更稳定。
     private var amplitudeSnapshot: Float = 0
+
+    /// LPC 流水线上次找到的有效 F1（Hz），仅在 lpcQueue 上访问。
+    private var lastValidF1: Float = 0
+
+    /// 当 LPC 未检到有效 F1 时，最多连续保持多少帧旧 F1 值。
+    private static let maxF1HoldFrames = 8
+
+    /// 相邻帧 F1 最大允许跳变量（Hz/帧）。F1 移动比 F2 慢，/a/→/i/ 跨度约 400 Hz。
+    private static let maxF1DeltaPerFrame: Float = 400
+    private var f1HoldCount: Int = 0
 
     /// LPC 流水线上次找到的有效 F2（Hz），仅在 lpcQueue 上访问。
     private var lastValidF2: Float = 0
@@ -325,6 +341,7 @@ final class AudioAnalyzer: ObservableObject {
         }
 
         guard rms >= Self.rmsThreshold else {
+            publishF1(nil)
             publishF2(nil)
             return
         }
@@ -347,6 +364,7 @@ final class AudioAnalyzer: ObservableObject {
 
         // r[0] 为零表示帧全静音（不应发生，但防御性处理）
         guard r[0] > 1e-10 else {
+            publishF1(nil)
             publishF2(nil)
             return
         }
@@ -375,6 +393,29 @@ final class AudioAnalyzer: ObservableObject {
         let isVoiced = currentPitchSnapshot > 0
                     || amplitudeSnapshot >= Self.amplitudeThreshold
 
+        // ── F1 稳定逻辑（与 F2 对称）─────────────────────────────────────────
+        var publishF1Value: Float? = nil
+
+        if isVoiced, let f1 = detectedF1 {
+            let delta = lastValidF1 > 0 ? abs(f1 - lastValidF1) : 0
+            if delta <= Self.maxF1DeltaPerFrame {
+                lastValidF1 = f1
+                f1HoldCount = 0
+                publishF1Value = f1
+            }
+        }
+
+        if publishF1Value == nil, isVoiced, lastValidF1 > 0, f1HoldCount < Self.maxF1HoldFrames {
+            f1HoldCount += 1
+            publishF1Value = lastValidF1
+        }
+
+        if publishF1Value == nil {
+            lastValidF1 = 0
+            f1HoldCount = 0
+        }
+
+        // ── F2 稳定逻辑 ───────────────────────────────────────────────────────
         var publishValue: Float? = nil
 
         // ① F0 在 + LPC 找到 F2 + 帧间跳变 ≤ maxF2DeltaPerFrame → 接受新值
@@ -406,12 +447,23 @@ final class AudioAnalyzer: ObservableObject {
         }
 
         if shouldPrint {
-            let f1Str  = detectedF1.map { String(format:"%.0f", $0) } ?? "nil"
-            let mode   = detectedF2 != nil ? "detected" : (publishValue != nil ? "hold(\(f2HoldCount))" : "nil")
-            print("[LPC] F1=\(f1Str)  f2Floor=\(String(format:"%.0f",f2Floor))  F2=\(publishValue.map{String(format:"%.0f",$0)} ?? "nil")  [\(mode)]")
+            let f1DetStr = detectedF1.map { String(format:"%.0f", $0) } ?? "nil"
+            let f1PubStr = publishF1Value.map { String(format:"%.0f", $0) } ?? "nil"
+            let f2Mode   = detectedF2 != nil ? "detected" : (publishValue != nil ? "hold(\(f2HoldCount))" : "nil")
+            print("[LPC] F1(det)=\(f1DetStr) F1(pub)=\(f1PubStr)  f2Floor=\(String(format:"%.0f",f2Floor))  F2=\(publishValue.map{String(format:"%.0f",$0)} ?? "nil")  [\(f2Mode)]")
         }
 
+        publishF1(publishF1Value)
         publishF2(publishValue)
+    }
+
+    private func publishF1(_ value: Float?) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.f1 = value ?? 0
+            self.f1History.removeFirst()
+            self.f1History.append(value)
+        }
     }
 
     private func publishF2(_ value: Float?) {
