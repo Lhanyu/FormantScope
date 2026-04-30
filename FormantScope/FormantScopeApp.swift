@@ -17,9 +17,9 @@ struct FormantScopeApp: App {
 #if os(macOS)
         WindowGroup {
             ContentView()
-                .frame(minWidth: 360, minHeight: 420)
+                .frame(minWidth: 360, minHeight: 360)
         }
-        .defaultSize(width: 420, height: 660)
+        .defaultSize(width: 660, height: 660)
         .commands { DisplayCommands() }
 
         Settings {
