@@ -91,6 +91,13 @@ struct ContentView: View {
                 if w < 380 { return max(26, dividerHeight * 0.72) }
                 return dividerHeight
             }()
+            /// 读数区与屏幕左右边距（原仅依赖全宽 HStack，边缘偏紧）。
+            let readoutEdgePadding: CGFloat = {
+                if w < 340 { return 16 }
+                if w < 380 { return 20 }
+                if w < 420 { return 24 }
+                return 28
+            }()
 #endif
 #if os(iOS)
             let readoutStackSpacing = readoutHSpacing
@@ -104,6 +111,7 @@ struct ContentView: View {
             let readoutLabelFontFinal: CGFloat = 12
             let readoutValueFontFinal: CGFloat = 48
             let readoutUnitFontFinal: CGFloat  = 14
+            let readoutEdgePadding: CGFloat = max(24, min(40, geo.size.width * 0.045))
 #endif
 
             ZStack {
@@ -178,9 +186,8 @@ struct ContentView: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
+                    .padding(.horizontal, readoutEdgePadding)
 #if os(iOS)
-                    // 只把顶部读数区整体下推，形成与右上角设置入口的竖向间距；
-                    // 不影响三横线垂直位置（整页 VStack 顶部 padding 会把两者一起拖下去）。
                     .padding(.top, 44)
 #endif
 
