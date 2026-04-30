@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "About" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于"
+          }
+        }
+      }
+    },
     "Cancel" : {
       "localizations" : {
         "zh-Hans" : {
@@ -12,10 +22,24 @@
       }
     },
     "Choose a folder for FormantScope WAV recordings." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为 FormantScope 的 WAV 录音选择一个文件夹。"
+          }
+        }
+      }
     },
     "Choose recording folder…" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择录音文件夹…"
+          }
+        }
+      }
     },
     "Display" : {
       "localizations" : {
@@ -73,6 +97,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "共振峰轴 – F1 / F2"
+          }
+        }
+      }
+    },
+    "FormantScope on GitHub" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FormantScope（GitHub）"
           }
         }
       }
@@ -137,35 +171,45 @@
         }
       }
     },
-    "OK" : {
-      "extractionState" : "stale",
+    "Pitch Axis – F0" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "好"
-          }
-        }
-      }
-    },
-    "Pitch Axis" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "音高轴"
+            "value" : "音高轴 – F0"
           }
         }
       }
     },
     "Record" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录音"
+          }
+        }
+      }
     },
     "Recording folder saved" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存录音文件夹"
+          }
+        }
+      }
     },
     "Recordings" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录音文件夹"
+          }
+        }
+      }
     },
     "Reset" : {
       "localizations" : {
@@ -278,7 +322,14 @@
       }
     },
     "Stop Recording" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止录音"
+          }
+        }
+      }
     },
     "Tap to dismiss" : {
       "localizations" : {
@@ -286,17 +337,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "点按关闭"
-          }
-        }
-      }
-    },
-    "The recording was saved to the folder you selected." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "录音已保存到您选择的文件夹。"
           }
         }
       }

@@ -39,6 +39,10 @@ struct SettingsView: View {
         case f0Min, f0Max, fmtMin, fmtMax
     }
 
+    private enum AppLinks {
+        static let sourceRepository = URL(string: "https://github.com/Lhanyu/FormantScope")!
+    }
+
     var body: some View {
         Form {
             // MARK: 显示开关
@@ -79,7 +83,7 @@ struct SettingsView: View {
                 rangeRow("Min", text: $f0MinText, field: .f0Min, placeholder: "50")
                 rangeRow("Max", text: $f0MaxText, field: .f0Max, placeholder: "600")
             } header: {
-                Text("Pitch Axis")
+                Text("Pitch Axis – F0")
             }
 
             Section {
@@ -100,6 +104,14 @@ struct SettingsView: View {
                     Text("Reset to Defaults")
                         .frame(maxWidth: .infinity)
                 }
+            }
+
+            Section {
+                Link(destination: AppLinks.sourceRepository) {
+                    Label("FormantScope on GitHub", systemImage: "link")
+                }
+            } header: {
+                Text("About")
             }
         }
         .formStyle(.grouped)
@@ -132,7 +144,7 @@ struct SettingsView: View {
         }
 #endif
 #if os(macOS)
-        .frame(width: 310, height: 460)
+        .frame(width: 310, height: 540)
 #endif
     }
 
