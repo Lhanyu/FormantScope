@@ -9,10 +9,12 @@
 ## English
 
 <p align="center">
-  <img src="docs/example-en.png" alt="FormantScope main screen (English labels)" width="720" />
+  <a href="docs/example-en.png" title="Open full-size screenshot">
+    <img src="docs/example-en.png" alt="FormantScope main screen (English labels)" width="420" />
+  </a>
 </p>
 
-<p align="center"><em>Listening view · English UI</em></p>
+<p align="center"><em>Listening view · English UI — click image to open full size</em></p>
 
 Brief intro for Apple platforms — **F0 (fundamental frequency)**, **F1 (first formant)**, and **F2 (second formant)** via a speech-oriented DSP pipeline and an audio graph that avoids tap conflicts.
 
@@ -137,10 +139,12 @@ Released under the [MIT License](LICENSE).
 ## 简体中文
 
 <p align="center">
-  <img src="docs/example-zh.png" alt="FormantScope 主界面（中文标注）" width="720" />
+  <a href="docs/example-zh.png" title="查看大图">
+    <img src="docs/example-zh.png" alt="FormantScope 主界面（中文标注）" width="420" />
+  </a>
 </p>
 
-<p align="center"><em>主界面聆听视图 · 中文界面</em></p>
+<p align="center"><em>主界面聆听视图 · 中文界面 — 点击图片查看原图</em></p>
 
 面向 Apple 平台的实时语音分析工具：跟踪 **F0（基频）**、**F1（第一共振峰）**、**F2（第二共振峰）**，采用面向语音的 DSP 与避免 tap 冲突的音频图。
 
