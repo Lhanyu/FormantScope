@@ -245,7 +245,6 @@ struct ContentView: View {
                             Button {
                                 if isRunning {
                                     withAnimation(controlRoomSpring) {
-                                        let wasRecording = isRecordingArmed
                                         isRecordingArmed = false
                                         analyzer.endRecording()
                                         analyzer.stop()
