@@ -1,6 +1,6 @@
 //
 //  RecordingFolderStore.swift
-//  VoiceTool
+//  FormantScope
 //
 //  一次性选择文件夹 + security-scoped bookmark；后续静默写入该路径。
 

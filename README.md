@@ -1,4 +1,4 @@
-# VoiceTool
+# FormantScope
 
 Real-time voice analysis app for Apple platforms, focused on **F0 (fundamental frequency)** and **F2 (second formant)** tracking with a speech-oriented DSP pipeline.
 
@@ -10,7 +10,7 @@ Real-time voice analysis app for Apple platforms, focused on **F0 (fundamental f
 
 ### Overview
 
-VoiceTool is a SwiftUI app that captures live microphone input and visualizes:
+FormantScope is a SwiftUI app that captures live microphone input and visualizes:
 
 - **F0**: pitch (fundamental frequency) in Hz
 - **F2**: second formant in Hz
@@ -31,7 +31,7 @@ It is designed for voice training, speech experiments, and educational demos whe
 
 #### 1) Audio Forking Pipeline (No Tap Conflict)
 
-`AVAudioNode` allows only one tap per bus, so VoiceTool avoids tap contention by forking the input path:
+`AVAudioNode` allows only one tap per bus, so FormantScope avoids tap contention by forking the input path:
 
 ```text
 Mic Input
@@ -78,16 +78,16 @@ Why this matters:
 ### Project Structure
 
 ```text
-VoiceTool/
-├── VoiceTool/
-│   ├── VoiceToolApp.swift
+FormantScope/
+├── FormantScope/
+│   ├── FormantScopeApp.swift
 │   ├── ContentView.swift
 │   ├── AudioAnalyzer.swift
 │   ├── Info.plist
 │   └── Assets.xcassets/
-├── VoiceTool.xcodeproj/
-├── VoiceToolTests/
-├── VoiceToolUITests/
+├── FormantScope.xcodeproj/
+├── FormantScopeTests/
+├── FormantScopeUITests/
 └── AudioKit/               # local dependency package
 ```
 
@@ -109,8 +109,8 @@ VoiceTool/
 
 #### Run
 
-1. Open `VoiceTool.xcodeproj`
-2. Select `VoiceTool` scheme
+1. Open `FormantScope.xcodeproj`
+2. Select `FormantScope` scheme
 3. Run on iOS device/simulator or macOS
 4. Grant microphone permission
 5. Tap **Start Listening**
@@ -155,7 +155,7 @@ If you want, I can generate a recommended `LICENSE` file and contribution templa
 
 ### 项目简介
 
-VoiceTool 是一个基于 SwiftUI 的实时语音分析应用，主要用于显示与跟踪：
+FormantScope 是一个基于 SwiftUI 的实时语音分析应用，主要用于显示与跟踪：
 
 - **F0 基频**（fundamental frequency）
 - **F2 第二共振峰**（second formant）
@@ -215,23 +215,23 @@ F2 从原始 PCM 经过以下流程提取：
 ### 项目结构
 
 ```text
-VoiceTool/
-├── VoiceTool/
-│   ├── VoiceToolApp.swift
+FormantScope/
+├── FormantScope/
+│   ├── FormantScopeApp.swift
 │   ├── ContentView.swift
 │   ├── AudioAnalyzer.swift
 │   ├── Info.plist
 │   └── Assets.xcassets/
-├── VoiceTool.xcodeproj/
-├── VoiceToolTests/
-├── VoiceToolUITests/
+├── FormantScope.xcodeproj/
+├── FormantScopeTests/
+├── FormantScopeUITests/
 └── AudioKit/（本地依赖）
 ```
 
 ### 快速开始
 
-1. 用 Xcode 打开 `VoiceTool.xcodeproj`
-2. 选择 `VoiceTool` scheme
+1. 用 Xcode 打开 `FormantScope.xcodeproj`
+2. 选择 `FormantScope` scheme
 3. 在模拟器/真机/macOS 运行
 4. 授予麦克风权限
 5. 点击“开始监听”

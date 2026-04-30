@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  VoiceTool
+//  FormantScope
 //
 //  Created by Hanyu on 2026/4/27.
 //

@@ -1,6 +1,6 @@
 //
-//  VoiceToolApp.swift
-//  VoiceTool
+//  FormantScopeApp.swift
+//  FormantScope
 //
 //  Created by Hanyu on 2026/4/25.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct VoiceToolApp: App {
+struct FormantScopeApp: App {
     init() {
         suppressCoreAudioXPCNoise()
     }

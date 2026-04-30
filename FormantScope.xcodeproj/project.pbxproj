@@ -10,7 +10,7 @@
 		7E04724E2F9D067000A91052 /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E04724D2F9D067000A91052 /* AudioKit */; };
 		7E04725D2F9D085F00A91052 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7E0472582F9D085F00A91052 /* Assets.xcassets */; };
 		7E04725E2F9D085F00A91052 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0472592F9D085F00A91052 /* ContentView.swift */; };
-		7E04725F2F9D085F00A91052 /* VoiceToolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */; };
+		7E04725F2F9D085F00A91052 /* FormantScopeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E04725B2F9D085F00A91052 /* FormantScopeApp.swift */; };
 		7E0472622F9D0DED00A91052 /* CSoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472612F9D0DED00A91052 /* CSoundpipeAudioKit */; };
 		7E0472642F9D0DEE00A91052 /* SoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472632F9D0DED00A91052 /* SoundpipeAudioKit */; };
 		7E047270AAAA000000A91052 /* AudioAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */; };
@@ -26,25 +26,25 @@
 			containerPortal = 7E0472052F9D01EB00A91052 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 7E04720C2F9D01EC00A91052;
-			remoteInfo = VoiceTool;
+			remoteInfo = FormantScope;
 		};
 		7E0472262F9D01EE00A91052 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7E0472052F9D01EB00A91052 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 7E04720C2F9D01EC00A91052;
-			remoteInfo = VoiceTool;
+			remoteInfo = FormantScope;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		7E04720D2F9D01EC00A91052 /* VoiceTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoiceTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E04721B2F9D01EE00A91052 /* VoiceToolTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VoiceToolTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E0472252F9D01EE00A91052 /* VoiceToolUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VoiceToolUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E04720D2F9D01EC00A91052 /* FormantScope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FormantScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E04721B2F9D01EE00A91052 /* FormantScopeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FormantScopeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E0472252F9D01EE00A91052 /* FormantScopeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FormantScopeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E0472582F9D085F00A91052 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7E0472592F9D085F00A91052 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		7E04725A2F9D085F00A91052 /* VoiceTool.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VoiceTool.entitlements; sourceTree = "<group>"; };
-		7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceToolApp.swift; sourceTree = "<group>"; };
+		7E04725A2F9D085F00A91052 /* FormantScope.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FormantScope.entitlements; sourceTree = "<group>"; };
+		7E04725B2F9D085F00A91052 /* FormantScopeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormantScopeApp.swift; sourceTree = "<group>"; };
 		7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAnalyzer.swift; sourceTree = "<group>"; };
 		7E04728FAAAA000100A91052 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		7E047290AAAA000200A91052 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -54,14 +54,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7E04721E2F9D01EE00A91052 /* VoiceToolTests */ = {
+		7E04721E2F9D01EE00A91052 /* FormantScopeTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = VoiceToolTests;
+			path = FormantScopeTests;
 			sourceTree = "<group>";
 		};
-		7E0472282F9D01EE00A91052 /* VoiceToolUITests */ = {
+		7E0472282F9D01EE00A91052 /* FormantScopeUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = VoiceToolUITests;
+			path = FormantScopeUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -97,9 +97,9 @@
 		7E0472042F9D01EB00A91052 = {
 			isa = PBXGroup;
 			children = (
-				7E04725C2F9D085F00A91052 /* VoiceTool */,
-				7E04721E2F9D01EE00A91052 /* VoiceToolTests */,
-				7E0472282F9D01EE00A91052 /* VoiceToolUITests */,
+				7E04725C2F9D085F00A91052 /* FormantScope */,
+				7E04721E2F9D01EE00A91052 /* FormantScopeTests */,
+				7E0472282F9D01EE00A91052 /* FormantScopeUITests */,
 				7E04720E2F9D01EC00A91052 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -107,14 +107,14 @@
 		7E04720E2F9D01EC00A91052 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7E04720D2F9D01EC00A91052 /* VoiceTool.app */,
-				7E04721B2F9D01EE00A91052 /* VoiceToolTests.xctest */,
-				7E0472252F9D01EE00A91052 /* VoiceToolUITests.xctest */,
+				7E04720D2F9D01EC00A91052 /* FormantScope.app */,
+				7E04721B2F9D01EE00A91052 /* FormantScopeTests.xctest */,
+				7E0472252F9D01EE00A91052 /* FormantScopeUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		7E04725C2F9D085F00A91052 /* VoiceTool */ = {
+		7E04725C2F9D085F00A91052 /* FormantScope */ = {
 			isa = PBXGroup;
 			children = (
 				7E77D7A42F9E019C00B47540 /* Info.plist */,
@@ -123,20 +123,20 @@
 				7E0472592F9D085F00A91052 /* ContentView.swift */,
 				7E04728FAAAA000100A91052 /* Localizable.xcstrings */,
 				7E047290AAAA000200A91052 /* SettingsView.swift */,
-				7E04725A2F9D085F00A91052 /* VoiceTool.entitlements */,
-				7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */,
+				7E04725A2F9D085F00A91052 /* FormantScope.entitlements */,
+				7E04725B2F9D085F00A91052 /* FormantScopeApp.swift */,
 				7E049022AAAA000300A91052 /* RecordingFolderStore.swift */,
 				7E049023AAAA000300A91052 /* RecordingFolderPicker.swift */,
 			);
-			path = VoiceTool;
+			path = FormantScope;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7E04720C2F9D01EC00A91052 /* VoiceTool */ = {
+		7E04720C2F9D01EC00A91052 /* FormantScope */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7E04722F2F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "VoiceTool" */;
+			buildConfigurationList = 7E04722F2F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "FormantScope" */;
 			buildPhases = (
 				7E0472092F9D01EC00A91052 /* Sources */,
 				7E04720A2F9D01EC00A91052 /* Frameworks */,
@@ -146,19 +146,19 @@
 			);
 			dependencies = (
 			);
-			name = VoiceTool;
+			name = FormantScope;
 			packageProductDependencies = (
 				7E04724D2F9D067000A91052 /* AudioKit */,
 				7E0472612F9D0DED00A91052 /* CSoundpipeAudioKit */,
 				7E0472632F9D0DED00A91052 /* SoundpipeAudioKit */,
 			);
-			productName = VoiceTool;
-			productReference = 7E04720D2F9D01EC00A91052 /* VoiceTool.app */;
+			productName = FormantScope;
+			productReference = 7E04720D2F9D01EC00A91052 /* FormantScope.app */;
 			productType = "com.apple.product-type.application";
 		};
-		7E04721A2F9D01EE00A91052 /* VoiceToolTests */ = {
+		7E04721A2F9D01EE00A91052 /* FormantScopeTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7E0472322F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "VoiceToolTests" */;
+			buildConfigurationList = 7E0472322F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "FormantScopeTests" */;
 			buildPhases = (
 				7E0472172F9D01EE00A91052 /* Sources */,
 				7E0472182F9D01EE00A91052 /* Frameworks */,
@@ -170,18 +170,18 @@
 				7E04721D2F9D01EE00A91052 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				7E04721E2F9D01EE00A91052 /* VoiceToolTests */,
+				7E04721E2F9D01EE00A91052 /* FormantScopeTests */,
 			);
-			name = VoiceToolTests;
+			name = FormantScopeTests;
 			packageProductDependencies = (
 			);
-			productName = VoiceToolTests;
-			productReference = 7E04721B2F9D01EE00A91052 /* VoiceToolTests.xctest */;
+			productName = FormantScopeTests;
+			productReference = 7E04721B2F9D01EE00A91052 /* FormantScopeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		7E0472242F9D01EE00A91052 /* VoiceToolUITests */ = {
+		7E0472242F9D01EE00A91052 /* FormantScopeUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7E0472352F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "VoiceToolUITests" */;
+			buildConfigurationList = 7E0472352F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "FormantScopeUITests" */;
 			buildPhases = (
 				7E0472212F9D01EE00A91052 /* Sources */,
 				7E0472222F9D01EE00A91052 /* Frameworks */,
@@ -193,13 +193,13 @@
 				7E0472272F9D01EE00A91052 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				7E0472282F9D01EE00A91052 /* VoiceToolUITests */,
+				7E0472282F9D01EE00A91052 /* FormantScopeUITests */,
 			);
-			name = VoiceToolUITests;
+			name = FormantScopeUITests;
 			packageProductDependencies = (
 			);
-			productName = VoiceToolUITests;
-			productReference = 7E0472252F9D01EE00A91052 /* VoiceToolUITests.xctest */;
+			productName = FormantScopeUITests;
+			productReference = 7E0472252F9D01EE00A91052 /* FormantScopeUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -225,7 +225,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 7E0472082F9D01EB00A91052 /* Build configuration list for PBXProject "VoiceTool" */;
+			buildConfigurationList = 7E0472082F9D01EB00A91052 /* Build configuration list for PBXProject "FormantScope" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -244,9 +244,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7E04720C2F9D01EC00A91052 /* VoiceTool */,
-				7E04721A2F9D01EE00A91052 /* VoiceToolTests */,
-				7E0472242F9D01EE00A91052 /* VoiceToolUITests */,
+				7E04720C2F9D01EC00A91052 /* FormantScope */,
+				7E04721A2F9D01EE00A91052 /* FormantScopeTests */,
+				7E0472242F9D01EE00A91052 /* FormantScopeUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -283,7 +283,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E04725E2F9D085F00A91052 /* ContentView.swift in Sources */,
-				7E04725F2F9D085F00A91052 /* VoiceToolApp.swift in Sources */,
+				7E04725F2F9D085F00A91052 /* FormantScopeApp.swift in Sources */,
 				7E047270AAAA000000A91052 /* AudioAnalyzer.swift in Sources */,
 				7E047291AAAA000200A91052 /* SettingsView.swift in Sources */,
 				7E049020AAAA000300A91052 /* RecordingFolderStore.swift in Sources */,
@@ -310,12 +310,12 @@
 /* Begin PBXTargetDependency section */
 		7E04721D2F9D01EE00A91052 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7E04720C2F9D01EC00A91052 /* VoiceTool */;
+			target = 7E04720C2F9D01EC00A91052 /* FormantScope */;
 			targetProxy = 7E04721C2F9D01EE00A91052 /* PBXContainerItemProxy */;
 		};
 		7E0472272F9D01EE00A91052 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7E04720C2F9D01EC00A91052 /* VoiceTool */;
+			target = 7E04720C2F9D01EC00A91052 /* FormantScope */;
 			targetProxy = 7E0472262F9D01EE00A91052 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -442,18 +442,18 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = VoiceTool/VoiceTool.entitlements;
+				CODE_SIGN_ENTITLEMENTS = FormantScope/FormantScope.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = X7YFXRH2R9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = VoiceTool/Info.plist;
+				INFOPLIST_FILE = FormantScope/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FormantScope;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"VoiceTool uses your microphone to analyze pitch (F0) and formants (F2) in real time.\"";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"FormantScope uses your microphone to analyze pitch (F0) and formants (F2) in real time.\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -469,7 +469,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.voicetool;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.formantscope;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -486,18 +486,18 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = VoiceTool/VoiceTool.entitlements;
+				CODE_SIGN_ENTITLEMENTS = FormantScope/FormantScope.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = X7YFXRH2R9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = VoiceTool/Info.plist;
+				INFOPLIST_FILE = FormantScope/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FormantScope;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"VoiceTool uses your microphone to analyze pitch (F0) and formants (F2) in real time.\"";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"FormantScope uses your microphone to analyze pitch (F0) and formants (F2) in real time.\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -513,7 +513,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.voicetool;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.formantscope;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -536,14 +536,14 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.voicetoolTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.formantscopeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VoiceTool.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VoiceTool";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FormantScope.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FormantScope";
 				XROS_DEPLOYMENT_TARGET = 2.4;
 			};
 			name = Debug;
@@ -559,14 +559,14 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.voicetoolTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.formantscopeTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VoiceTool.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VoiceTool";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FormantScope.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FormantScope";
 				XROS_DEPLOYMENT_TARGET = 2.4;
 			};
 			name = Release;
@@ -581,14 +581,14 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.voicetoolUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.formantscopeUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = VoiceTool;
+				TEST_TARGET_NAME = FormantScope;
 				XROS_DEPLOYMENT_TARGET = 2.4;
 			};
 			name = Debug;
@@ -603,14 +603,14 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.voicetoolUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.formantscopeUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = VoiceTool;
+				TEST_TARGET_NAME = FormantScope;
 				XROS_DEPLOYMENT_TARGET = 2.4;
 			};
 			name = Release;
@@ -618,7 +618,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7E0472082F9D01EB00A91052 /* Build configuration list for PBXProject "VoiceTool" */ = {
+		7E0472082F9D01EB00A91052 /* Build configuration list for PBXProject "FormantScope" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7E04722D2F9D01EE00A91052 /* Debug */,
@@ -627,7 +627,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7E04722F2F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "VoiceTool" */ = {
+		7E04722F2F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "FormantScope" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7E0472302F9D01EE00A91052 /* Debug */,
@@ -636,7 +636,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7E0472322F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "VoiceToolTests" */ = {
+		7E0472322F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "FormantScopeTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7E0472332F9D01EE00A91052 /* Debug */,
@@ -645,7 +645,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7E0472352F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "VoiceToolUITests" */ = {
+		7E0472352F9D01EE00A91052 /* Build configuration list for PBXNativeTarget "FormantScopeUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7E0472362F9D01EE00A91052 /* Debug */,

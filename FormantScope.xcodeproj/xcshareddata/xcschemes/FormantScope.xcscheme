@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7E04720C2F9D01EC00A91052"
-               BuildableName = "VoiceTool.app"
-               BlueprintName = "VoiceTool"
-               ReferencedContainer = "container:VoiceTool.xcodeproj">
+               BuildableName = "FormantScope.app"
+               BlueprintName = "FormantScope"
+               ReferencedContainer = "container:FormantScope.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -36,9 +36,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7E04721A2F9D01EE00A91052"
-               BuildableName = "VoiceToolTests.xctest"
-               BlueprintName = "VoiceToolTests"
-               ReferencedContainer = "container:VoiceTool.xcodeproj">
+               BuildableName = "FormantScopeTests.xctest"
+               BlueprintName = "FormantScopeTests"
+               ReferencedContainer = "container:FormantScope.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -47,9 +47,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7E0472242F9D01EE00A91052"
-               BuildableName = "VoiceToolUITests.xctest"
-               BlueprintName = "VoiceToolUITests"
-               ReferencedContainer = "container:VoiceTool.xcodeproj">
+               BuildableName = "FormantScopeUITests.xctest"
+               BlueprintName = "FormantScopeUITests"
+               ReferencedContainer = "container:FormantScope.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -69,9 +69,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7E04720C2F9D01EC00A91052"
-            BuildableName = "VoiceTool.app"
-            BlueprintName = "VoiceTool"
-            ReferencedContainer = "container:VoiceTool.xcodeproj">
+            BuildableName = "FormantScope.app"
+            BlueprintName = "FormantScope"
+            ReferencedContainer = "container:FormantScope.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <EnvironmentVariables>
@@ -93,9 +93,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7E04720C2F9D01EC00A91052"
-            BuildableName = "VoiceTool.app"
-            BlueprintName = "VoiceTool"
-            ReferencedContainer = "container:VoiceTool.xcodeproj">
+            BuildableName = "FormantScope.app"
+            BlueprintName = "FormantScope"
+            ReferencedContainer = "container:FormantScope.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -33,5 +33,5 @@ Pods/
 *.cer
 *.mobileprovision
 
-# App icon 导出/暂存副本（正式资源在 VoiceTool/Assets.xcassets）
-VoiceTool/AppIcons/
+# App icon 导出/暂存副本（正式资源在 FormantScope/Assets.xcassets）
+FormantScope/AppIcons/

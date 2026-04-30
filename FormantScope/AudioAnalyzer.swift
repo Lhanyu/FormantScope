@@ -1,5 +1,5 @@
 // AudioAnalyzer.swift
-// VoiceTool
+// FormantScope
 //
 // 引擎层：PitchTap 提取 F0（基频）；RawDataTap + LPC 提取 F2（第二共振峰）。
 
@@ -116,7 +116,7 @@ final class AudioAnalyzer: ObservableObject {
     private var isRunning = false
 
     /// LPC 计算专用后台队列，避免阻塞主线程。
-    private let lpcQueue = DispatchQueue(label: "com.voicetool.lpc", qos: .userInteractive)
+    private let lpcQueue = DispatchQueue(label: "com.formantscope.lpc", qos: .userInteractive)
 
     private var consecutiveVoiceFrames: Int = 0
     /// F0 显示保持：上次确认的音高值，onset 结束后继续展示 maxPitchHoldFrames 帧。
@@ -137,7 +137,7 @@ final class AudioAnalyzer: ObservableObject {
 
     /// 往用户目录写 WAV 的 tap（每节点仅允许一个 tap，故单独挂 recordMixer）。
     private var recordTapInstalled = false
-    private let recordIOQueue = DispatchQueue(label: "com.yueranwang.voicetool.record", qos: .utility)
+    private let recordIOQueue = DispatchQueue(label: "com.yueranwang.formantscope.record", qos: .utility)
     private var recordingFile: AVAudioFile?
     /// 与 recordingFile 成对的 security-scoped 目录 URL（须在 stop 写盘后 stopAccessing）。
     private var recordingScopedParentURL: URL?
@@ -460,7 +460,7 @@ final class AudioAnalyzer: ObservableObject {
             do {
                 try file.write(from: buffer)
             } catch {
-                print("[VoiceTool] Recording write failed: \(error)")
+                print("[FormantScope] Recording write failed: \(error)")
             }
         }
     }

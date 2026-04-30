@@ -1,13 +1,13 @@
 //
-//  VoiceToolUITestsLaunchTests.swift
-//  VoiceToolUITests
+//  FormantScopeUITestsLaunchTests.swift
+//  FormantScopeUITests
 //
 //  Created by Hanyu on 2026/4/25.
 //
 
 import XCTest
 
-final class VoiceToolUITestsLaunchTests: XCTestCase {
+final class FormantScopeUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
