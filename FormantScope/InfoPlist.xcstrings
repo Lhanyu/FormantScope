@@ -1,0 +1,22 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSMicrophoneUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FormantScope uses your microphone to analyze pitch (F0) and formants (F1, F2) in real time."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FormantScope 需要使用麦克风，以实时分析音高（F0）与共振峰（F1、F2）。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

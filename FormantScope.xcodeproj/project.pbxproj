@@ -13,6 +13,7 @@
 		7E0472622F9D0DED00A91052 /* CSoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472612F9D0DED00A91052 /* CSoundpipeAudioKit */; };
 		7E0472642F9D0DEE00A91052 /* SoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472632F9D0DED00A91052 /* SoundpipeAudioKit */; };
 		7E047270AAAA000000A91052 /* AudioAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */; };
+		7E04A1012F9E020000B47540 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7E04A1002F9E020000B47540 /* InfoPlist.xcstrings */; };
 		7E047290AAAA000100A91052 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7E04728FAAAA000100A91052 /* Localizable.xcstrings */; };
 		7E047291AAAA000200A91052 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E047290AAAA000200A91052 /* SettingsView.swift */; };
 		7E049020AAAA000300A91052 /* RecordingFolderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E049022AAAA000300A91052 /* RecordingFolderStore.swift */; };
@@ -45,6 +46,7 @@
 		7E04725A2F9D085F00A91052 /* FormantScope.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FormantScope.entitlements; sourceTree = "<group>"; };
 		7E04725B2F9D085F00A91052 /* FormantScopeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormantScopeApp.swift; sourceTree = "<group>"; };
 		7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAnalyzer.swift; sourceTree = "<group>"; };
+		7E04A1002F9E020000B47540 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		7E04728FAAAA000100A91052 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		7E047290AAAA000200A91052 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		7E77D7A42F9E019C00B47540 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 				7E0472582F9D085F00A91052 /* Assets.xcassets */,
 				7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */,
 				7E0472592F9D085F00A91052 /* ContentView.swift */,
+				7E04A1002F9E020000B47540 /* InfoPlist.xcstrings */,
 				7E04728FAAAA000100A91052 /* Localizable.xcstrings */,
 				7E047290AAAA000200A91052 /* SettingsView.swift */,
 				7E04725A2F9D085F00A91052 /* FormantScope.entitlements */,
@@ -253,6 +256,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E04725D2F9D085F00A91052 /* Assets.xcassets in Resources */,
+				7E04A1012F9E020000B47540 /* InfoPlist.xcstrings in Resources */,
 				7E047290AAAA000100A91052 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -449,7 +453,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FormantScope;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"FormantScope uses your microphone to analyze pitch (F0) and formants (F2) in real time.\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -492,7 +495,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FormantScope;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"FormantScope uses your microphone to analyze pitch (F0) and formants (F2) in real time.\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
