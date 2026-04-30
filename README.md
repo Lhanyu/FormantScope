@@ -1,6 +1,6 @@
 # FormantScope
 
-Real-time voice analysis app for Apple platforms. It tracks **F0 (fundamental frequency)**, **F1**, and **F2 (second formant)** using a speech-oriented DSP pipeline plus an audio graph layout that avoids tap conflicts.
+Real-time voice analysis app for Apple platforms. It tracks **F0 (fundamental frequency)**, **F1 (first formant)**, and **F2 (second formant)** using a speech-oriented DSP pipeline plus an audio graph layout that avoids tap conflicts.
 
 [简体中文](#简体中文)
 
