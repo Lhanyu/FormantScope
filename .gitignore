@@ -32,3 +32,6 @@ Pods/
 *.p12
 *.cer
 *.mobileprovision
+
+# App icon 导出/暂存副本（正式资源在 VoiceTool/Assets.xcassets）
+VoiceTool/AppIcons/

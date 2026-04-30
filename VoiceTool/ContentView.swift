@@ -8,15 +8,25 @@
 import SwiftUI
 import AVFoundation
 import Charts
+#if os(macOS)
+import AppKit
+#endif
 
 struct ContentView: View {
 
     @StateObject private var analyzer = AudioAnalyzer()
+    @ObservedObject private var folderStore = RecordingFolderStore.shared
     @State private var isRunning = false
+    @State private var isRecordingArmed = false
+    /// 选完文件夹后是否自动进入录音（首次点 Record 触发选目录时使用）。
+    @State private var pendingArmRecordAfterPick = false
+    @State private var showFolderPicker = false
     /// 主区卡片在屏幕坐标系（命名 "rootSpace"）下的 frame，由前景 placeholder 通过
     /// PreferenceKey 上报给后景全屏图表。后景图表据此把 [0,1] Y 域精准对齐到这块区域，
     /// 超出 [0,1] 的部分自然往整屏上下溢出（曲线越界变"探出主区"的 geek 效果）。
     @State private var cardFrame: CGRect = .zero
+    /// 底部录制 + 停止聆听两个按钮的 HStack 在 rootSpace 中的外接矩形，用于对齐保存浮窗。
+    @State private var controlStripFrame: CGRect = .zero
 
     // MARK: 持久化设置
     @AppStorage("showF1")  private var showF1:  Bool   = true
@@ -26,7 +36,7 @@ struct ContentView: View {
     @AppStorage("fmtMin")  private var fmtMin:  Double = 200
     @AppStorage("fmtMax")  private var fmtMax:  Double = 3_500
 
-#if os(iOS)
+#if os(iOS) || os(visionOS)
     @State private var showSettings = false
 #endif
 
@@ -189,34 +199,151 @@ struct ContentView: View {
 
                     Spacer()
 
-                    Button {
-                        if isRunning {
-                            analyzer.stop()
-                            isRunning = false
-                        } else {
-                            isRunning = analyzer.start()
+                    /// 底部：全宽大条在 **右侧槽**（开始聆听）；一分为二时左=录音、右=停止聆听，
+                    /// 宽度从左槽 0→半宽、右槽全宽→半宽，大条视感收到 **右侧** 与「停止聆听」对应。
+                    let controlRoomSpring = Animation.spring(response: 0.42, dampingFraction: 0.86)
+
+                    GeometryReader { innerGeo in
+                        let gap: CGFloat = isRunning ? 12 : 0
+                        let totalW = innerGeo.size.width
+                        let halfW = max(0, (totalW - gap) / 2)
+                        let leftW = isRunning ? halfW : 0
+                        let rightW = isRunning ? halfW : totalW
+
+                        HStack(spacing: gap) {
+                            Group {
+                                if isRunning {
+                                    Button {
+                                        withAnimation(controlRoomSpring) {
+                                            toggleRecordingArmed()
+                                        }
+                                    } label: {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: isRecordingArmed ? "stop.circle.fill" : "record.circle")
+                                                .contentTransition(.symbolEffect(.replace))
+                                            Text(isRecordingArmed ? "Stop Recording" : "Record")
+                                                .contentTransition(.interpolate)
+                                                .lineLimit(1)
+                                                .minimumScaleFactor(0.55)
+                                        }
+                                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 16)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .tint(isRecordingArmed ? Color.orange : Color.accentColor)
+                                    .animation(controlRoomSpring, value: isRecordingArmed)
+                                } else {
+                                    Color.clear
+                                        .allowsHitTesting(false)
+                                }
+                            }
+                            .frame(width: leftW)
+                            .clipped()
+                            .animation(controlRoomSpring, value: isRunning)
+
+                            Button {
+                                if isRunning {
+                                    withAnimation(controlRoomSpring) {
+                                        let wasRecording = isRecordingArmed
+                                        isRecordingArmed = false
+                                        analyzer.endRecording()
+                                        analyzer.stop()
+                                        isRunning = false
+                                    }
+                                } else {
+                                    withAnimation(controlRoomSpring) {
+                                        isRecordingArmed = false
+                                        isRunning = analyzer.start()
+                                    }
+                                }
+                            } label: {
+                                Group {
+                                    if isRunning {
+                                        Label("Stop Listening", systemImage: "stop.circle.fill")
+                                    } else {
+                                        Label("Start Listening", systemImage: "mic.circle.fill")
+                                    }
+                                }
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.55)
+                                .frame(maxWidth: .infinity)
+                                .contentTransition(.interpolate)
+                                .animation(controlRoomSpring, value: isRunning)
+                                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                                .padding(.vertical, 16)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(isRunning ? Color.red : Color.accentColor)
+                            .animation(controlRoomSpring, value: isRunning)
+                            .frame(width: rightW)
+                            .clipped()
+                            .animation(controlRoomSpring, value: isRunning)
                         }
-                    } label: {
-                        Label(
-                            isRunning ? "Stop Listening" : "Start Listening",
-                            systemImage: isRunning ? "stop.circle.fill" : "mic.circle.fill"
-                        )
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .frame(width: totalW)
+                        .background {
+                            GeometryReader { proxy in
+                                Color.clear.preference(
+                                    key: ControlStripFrameKey.self,
+                                    value: proxy.frame(in: .named("rootSpace"))
+                                )
+                            }
+                        }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(isRunning ? .red : .accentColor)
+                    .frame(height: 60)
                     .padding(.horizontal, 32)
                     .padding(.bottom, buttonBottomPad)
-                    .animation(.easeInOut(duration: 0.2), value: isRunning)
                 }
             }
             .coordinateSpace(name: "rootSpace")
             .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
+            .onPreferenceChange(ControlStripFrameKey.self) { controlStripFrame = $0 }
             .onAppear { requestMicrophonePermission() }
-#if os(iOS)
-            // iOS 设置入口：无背景三横线，整体下移，与下方 F0 读数拉开距离。
+            .animation(.spring(response: 0.35, dampingFraction: 0.88), value: analyzer.lastSavedRecordingPath)
+            .onChange(of: analyzer.lastSavedRecordingPath) { _, newPath in
+                guard let path = newPath else { return }
+                Task {
+                    try? await Task.sleep(for: .seconds(5))
+                    await MainActor.run {
+                        if analyzer.lastSavedRecordingPath == path {
+                            analyzer.clearSavedRecordingToast()
+                        }
+                    }
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if let path = analyzer.lastSavedRecordingPath, controlStripFrame.height > 0 {
+                    Button {
+                        analyzer.clearSavedRecordingToast()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Saved successfully")
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            Text(path)
+                                .font(.caption)
+                                .monospaced()
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(6)
+                                .minimumScaleFactor(0.75)
+                                .textSelection(.enabled)
+                            Text("Tap to dismiss")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(14)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .frame(width: controlStripFrame.width)
+                    .padding(.bottom, geo.size.height - controlStripFrame.minY)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+#if os(iOS) || os(visionOS)
+            // iOS / visionOS：设置入口与录音目录选择
             .overlay(alignment: .topTrailing) {
                 Button { showSettings = true } label: {
                     Image(systemName: "line.3.horizontal")
@@ -240,11 +367,96 @@ struct ContentView: View {
                         }
                 }
             }
+            .sheet(isPresented: $showFolderPicker) {
+                RecordingFolderPicker(
+                    isPresented: $showFolderPicker,
+                    onFolderPicked: handlePickedRecordingFolder,
+                    onCancelled: { pendingArmRecordAfterPick = false }
+                )
+            }
 #endif
         }
     }
 
     // MARK: - Helpers
+
+    private func toggleRecordingArmed() {
+        guard isRunning else { return }
+        if isRecordingArmed {
+            isRecordingArmed = false
+            analyzer.endRecording()
+            return
+        }
+        if !folderStore.hasBookmark {
+            pendingArmRecordAfterPick = true
+#if os(macOS)
+            presentMacRecordingFolderPicker()
+#else
+            showFolderPicker = true
+#endif
+            return
+        }
+        startRecordingToUserFolderOrReauth()
+    }
+
+    private func startRecordingToUserFolderOrReauth() {
+        do {
+            try analyzer.beginRecordingToUserFolder(store: folderStore)
+            isRecordingArmed = true
+        } catch {
+            if let folderErr = error as? RecordingFolderError {
+                if case .staleBookmark = folderErr {
+                    folderStore.clearBookmark()
+                }
+            }
+            pendingArmRecordAfterPick = true
+#if os(macOS)
+            presentMacRecordingFolderPicker()
+#else
+            showFolderPicker = true
+#endif
+        }
+    }
+
+    private func handlePickedRecordingFolder(_ url: URL) {
+        do {
+            try folderStore.saveBookmark(for: url)
+            if pendingArmRecordAfterPick {
+                pendingArmRecordAfterPick = false
+                if isRunning {
+                    do {
+                        try analyzer.beginRecordingToUserFolder(store: folderStore)
+                        isRecordingArmed = true
+                    } catch {
+                        pendingArmRecordAfterPick = true
+#if os(macOS)
+                        presentMacRecordingFolderPicker()
+#else
+                        showFolderPicker = true
+#endif
+                    }
+                }
+            }
+        } catch {
+            pendingArmRecordAfterPick = false
+        }
+    }
+
+#if os(macOS)
+    private func presentMacRecordingFolderPicker() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Choose"
+        panel.message = "Choose a folder for FormantScope recordings"
+        guard panel.runModal() == .OK, let url = panel.url else {
+            pendingArmRecordAfterPick = false
+            return
+        }
+        handlePickedRecordingFolder(url)
+    }
+#endif
 
     private func requestMicrophonePermission() {
 #if os(iOS)
@@ -269,6 +481,17 @@ struct ContentView: View {
 /// 简单写成 `value = nextValue()`，最后一个被遍历到的视图（通常是没设值的那种）
 /// 就会把真正的 placeholder frame 覆盖回 .zero，导致 cardFrame 永远拿不到。
 private struct CardFrameKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if next.width > 0 && next.height > 0 {
+            value = next
+        }
+    }
+}
+
+/// 底部控制条（录制 + 停止聆听）在 rootSpace 中的外接矩形，用于保存成功浮窗贴齐按钮上沿与左右边。
+private struct ControlStripFrameKey: PreferenceKey {
     static var defaultValue: CGRect = .zero
     static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
         let next = nextValue()
@@ -308,7 +531,7 @@ private struct FrequencyReadout: View {
                 .minimumScaleFactor(0.28)
                 .lineLimit(1)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(value > 0 ? color : .secondary)
+                .foregroundStyle(value > 0 ? color : color.opacity(0.5))
                 .contentTransition(.numericText())
                 .animation(.spring(duration: 0.2), value: value)
 

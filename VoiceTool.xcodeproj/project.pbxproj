@@ -14,8 +14,10 @@
 		7E0472622F9D0DED00A91052 /* CSoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472612F9D0DED00A91052 /* CSoundpipeAudioKit */; };
 		7E0472642F9D0DEE00A91052 /* SoundpipeAudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0472632F9D0DED00A91052 /* SoundpipeAudioKit */; };
 		7E047270AAAA000000A91052 /* AudioAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */; };
-		7E047291AAAA000200A91052 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E047290AAAA000200A91052 /* SettingsView.swift */; };
 		7E047290AAAA000100A91052 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7E04728FAAAA000100A91052 /* Localizable.xcstrings */; };
+		7E047291AAAA000200A91052 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E047290AAAA000200A91052 /* SettingsView.swift */; };
+		7E049020AAAA000300A91052 /* RecordingFolderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E049022AAAA000300A91052 /* RecordingFolderStore.swift */; };
+		7E049021AAAA000300A91052 /* RecordingFolderPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E049023AAAA000300A91052 /* RecordingFolderPicker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,9 +46,11 @@
 		7E04725A2F9D085F00A91052 /* VoiceTool.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VoiceTool.entitlements; sourceTree = "<group>"; };
 		7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceToolApp.swift; sourceTree = "<group>"; };
 		7E04726FAAAA000000A91052 /* AudioAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAnalyzer.swift; sourceTree = "<group>"; };
-		7E047290AAAA000200A91052 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		7E04728FAAAA000100A91052 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		7E047290AAAA000200A91052 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		7E77D7A42F9E019C00B47540 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7E049022AAAA000300A91052 /* RecordingFolderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingFolderStore.swift; sourceTree = "<group>"; };
+		7E049023AAAA000300A91052 /* RecordingFolderPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingFolderPicker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -121,6 +125,8 @@
 				7E047290AAAA000200A91052 /* SettingsView.swift */,
 				7E04725A2F9D085F00A91052 /* VoiceTool.entitlements */,
 				7E04725B2F9D085F00A91052 /* VoiceToolApp.swift */,
+				7E049022AAAA000300A91052 /* RecordingFolderStore.swift */,
+				7E049023AAAA000300A91052 /* RecordingFolderPicker.swift */,
 			);
 			path = VoiceTool;
 			sourceTree = "<group>";
@@ -280,6 +286,8 @@
 				7E04725F2F9D085F00A91052 /* VoiceToolApp.swift in Sources */,
 				7E047270AAAA000000A91052 /* AudioAnalyzer.swift in Sources */,
 				7E047291AAAA000200A91052 /* SettingsView.swift in Sources */,
+				7E049020AAAA000300A91052 /* RecordingFolderStore.swift in Sources */,
+				7E049021AAAA000300A91052 /* RecordingFolderPicker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -442,7 +450,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VoiceTool/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FormantScope;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"VoiceTool uses your microphone to analyze pitch (F0) and formants (F2) in real time.\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -452,12 +462,12 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.voicetool;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -484,7 +494,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VoiceTool/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FormantScope;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "\"VoiceTool uses your microphone to analyze pitch (F0) and formants (F2) in real time.\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -494,12 +506,12 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yueranwang.voicetool;
 				PRODUCT_NAME = "$(TARGET_NAME)";

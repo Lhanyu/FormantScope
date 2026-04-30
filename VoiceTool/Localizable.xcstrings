@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Cancel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Choose a folder for FormantScope WAV recordings." : {
+
+    },
+    "Choose recording folder…" : {
+
+    },
     "Display" : {
       "localizations" : {
         "zh-Hans" : {
@@ -111,12 +127,72 @@
         }
       }
     },
+    "Next time you record, you will be asked to choose a folder again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下次录音时需要重新选择文件夹。"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
+          }
+        }
+      }
+    },
     "Pitch Axis" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "音高轴"
+          }
+        }
+      }
+    },
+    "Record" : {
+
+    },
+    "Recording folder saved" : {
+
+    },
+    "Recordings" : {
+
+    },
+    "Reset" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置"
+          }
+        }
+      }
+    },
+    "Reset recording folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置录音文件夹"
+          }
+        }
+      }
+    },
+    "Reset saved recording folder?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要清除已保存的录音文件夹吗？"
           }
         }
       }
@@ -137,6 +213,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "s"
+          }
+        }
+      }
+    },
+    "Saved successfully" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存成功"
           }
         }
       }
@@ -187,6 +273,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "停止监听"
+          }
+        }
+      }
+    },
+    "Stop Recording" : {
+
+    },
+    "Tap to dismiss" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点按关闭"
+          }
+        }
+      }
+    },
+    "The recording was saved to the folder you selected." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录音已保存到您选择的文件夹。"
           }
         }
       }

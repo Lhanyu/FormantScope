@@ -34,6 +34,9 @@ final class AudioAnalyzer: ObservableObject {
     /// 最近 100 帧的 F2 历史。nil 表示静音帧或 LPC 未找到有效 F2。
     @Published var f2History: [Float?] = Array(repeating: nil, count: 100)
 
+    /// 最近一次保存的录音完整路径（含文件名）；非 nil 时主界面可显示非阻塞浮层。
+    @Published private(set) var lastSavedRecordingPath: String?
+
     // MARK: - Noise gate
 
     /// 振幅低于此阈值时视为静音（PitchTap / AUBIO 归一化幅度）。
@@ -126,8 +129,20 @@ final class AudioAnalyzer: ObservableObject {
     /// 静音 Fader：AudioEngine 必须设置 output 才能让 tap 正常触发。
     private var silence: Fader?
 
-    /// 用于读取真实硬件采样率（引擎启动后才有效）。
+    /// mic → innerMixer → **recordMixer** → Fader；录音 tap 仅挂在 recordMixer。
+    private var recordMixer: Mixer?
+
+    /// RawDataTap / 采样率引用：挂在 innerMixer（原 tapMixer）。
     private var tapMixer: Mixer?
+
+    /// 往用户目录写 WAV 的 tap（每节点仅允许一个 tap，故单独挂 recordMixer）。
+    private var recordTapInstalled = false
+    private let recordIOQueue = DispatchQueue(label: "com.yueranwang.voicetool.record", qos: .utility)
+    private var recordingFile: AVAudioFile?
+    /// 与 recordingFile 成对的 security-scoped 目录 URL（须在 stop 写盘后 stopAccessing）。
+    private var recordingScopedParentURL: URL?
+    /// 当前正在写入的 WAV URL（`endRecording` 后用其 path 提示浮层）。
+    private var activeRecordingFileURL: URL?
 
     /// Debug 帧计数，每 30 帧打印一次 LPC 诊断日志。
     private var lpcDebugCount = 0
@@ -180,9 +195,14 @@ final class AudioAnalyzer: ObservableObject {
         // 重建前先清理旧 tap，避免重复 installTap。
         pitchTap?.stop()
         rawDataTap?.stop()
+        if recordTapInstalled, let rm = recordMixer {
+            rm.avAudioNode.removeTap(onBus: 0)
+            recordTapInstalled = false
+        }
         pitchTap = nil
         rawDataTap = nil
         tapMixer = nil
+        recordMixer = nil
         silence = nil
 
         guard let mic = engine.input else {
@@ -191,11 +211,12 @@ final class AudioAnalyzer: ObservableObject {
         }
 
         // AVAudioNode 一次只允许一个 installTap。
-        // 用 Mixer 把信号分叉：PitchTap 挂在 mic（avAudioNode A），
-        // RawDataTap 挂在 mixer（avAudioNode B），两者互不冲突。
-        let mixer      = Mixer(mic)
-        tapMixer       = mixer          // 保存引用，供 findFormants 读取真实采样率
-        let silenceNode = Fader(mixer, gain: 0)
+        // innerMixer：RawDataTap；recordMixer：写入 WAV；PitchTap 仍挂在 mic。
+        let innerMixer = Mixer(mic)
+        tapMixer       = innerMixer
+        let recordBranch = Mixer(innerMixer)
+        recordMixer    = recordBranch
+        let silenceNode = Fader(recordBranch, gain: 0)
         silence = silenceNode
         engine.output = silenceNode
 
@@ -284,9 +305,9 @@ final class AudioAnalyzer: ObservableObject {
             self.pitchHistory.append(displayPitch)
         }
 
-        // RawDataTap 挂在 mixer 而非 mic，避免与 PitchTap 争用同一 AVAudioNode 的 installTap。
+        // RawDataTap 挂在 innerMixer 而非 mic，避免与 PitchTap 争用同一 AVAudioNode 的 installTap。
         // bufferSize 4096 与 PitchTap 内部缓冲大小一致，使两条历史曲线帧率相近（约 10 fps）。
-        rawDataTap = RawDataTap(mixer, bufferSize: 4_096, callbackQueue: lpcQueue) { [weak self] samples in
+        rawDataTap = RawDataTap(innerMixer, bufferSize: 4_096, callbackQueue: lpcQueue) { [weak self] samples in
             self?.processLPC(samples)
         }
         hasBuiltGraph = true
@@ -309,6 +330,7 @@ final class AudioAnalyzer: ObservableObject {
         }
         do {
             try engine.start()
+            installRecordTapIfNeeded()
             pitchTap?.start()
             rawDataTap?.start()
             isRunning = true
@@ -321,8 +343,13 @@ final class AudioAnalyzer: ObservableObject {
 
     func stop() {
         guard isRunning else { return }
+        endRecording()
         pitchTap?.stop()
         rawDataTap?.stop()
+        if recordTapInstalled, let rm = recordMixer {
+            rm.avAudioNode.removeTap(onBus: 0)
+            recordTapInstalled = false
+        }
         engine.stop()
         // 清理渲染状态，提升 iOS 上重复启停稳定性（不破坏现有连接图）。
         engine.avEngine.reset()
@@ -330,6 +357,112 @@ final class AudioAnalyzer: ObservableObject {
 #if os(iOS)
         // 不在每次 stop 后立刻 setActive(false)，避免频繁路由重配置引发通道格式不一致。
 #endif
+    }
+
+    // MARK: - User folder recording (WAV)
+
+    enum RecordingError: LocalizedError {
+        case engineNotRunning
+        case graphNotReady
+        case invalidOutputFormat
+
+        var errorDescription: String? {
+            switch self {
+            case .engineNotRunning: return "Start listening before recording."
+            case .graphNotReady: return "Audio graph is not ready."
+            case .invalidOutputFormat: return "Could not read microphone output format."
+            }
+        }
+    }
+
+    /// 在用户已选目录中创建 `formantscope-*.wav` 并写入 PCM；需已 `start()`。
+    func beginRecordingToUserFolder(store: RecordingFolderStore = .shared) throws {
+        guard isRunning else { throw RecordingError.engineNotRunning }
+        try beginRecordingToUserFolderLocked(store: store)
+    }
+
+    private func beginRecordingToUserFolderLocked(store: RecordingFolderStore) throws {
+        guard recordingScopedParentURL == nil else { return }
+        var alreadyRecording = false
+        recordIOQueue.sync { alreadyRecording = (recordingFile != nil) }
+        guard !alreadyRecording else { return }
+
+        installRecordTapIfNeeded()
+        guard recordTapInstalled, let rm = recordMixer else {
+            throw RecordingError.graphNotReady
+        }
+
+        let parent = try store.resolveAndStartAccess()
+        let format = rm.avAudioNode.outputFormat(forBus: 0)
+        guard format.sampleRate > 0 else {
+            parent.stopAccessingSecurityScopedResource()
+            throw RecordingError.invalidOutputFormat
+        }
+
+        let fileURL = parent.appendingPathComponent(RecordingFolderStore.makeFileName(), isDirectory: false)
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+
+        do {
+            let file = try AVAudioFile(
+                forWriting: fileURL,
+                settings: format.settings,
+                commonFormat: format.commonFormat,
+                interleaved: format.isInterleaved
+            )
+            recordingScopedParentURL = parent
+            activeRecordingFileURL = fileURL
+            recordIOQueue.sync { recordingFile = file }
+        } catch {
+            parent.stopAccessingSecurityScopedResource()
+            activeRecordingFileURL = nil
+            throw error
+        }
+    }
+
+    /// 停止写入并释放 security-scoped 访问；不停止引擎。
+    func endRecording() {
+        let pathToAnnounce = activeRecordingFileURL?.standardizedFileURL.path
+        activeRecordingFileURL = nil
+        recordIOQueue.sync { recordingFile = nil }
+        if let u = recordingScopedParentURL {
+            u.stopAccessingSecurityScopedResource()
+            recordingScopedParentURL = nil
+        }
+        if let path = pathToAnnounce {
+            Task { @MainActor in
+                self.lastSavedRecordingPath = path
+            }
+        }
+    }
+
+    /// 关闭底部保存成功浮层（用户点按或超时后调用）。
+    func clearSavedRecordingToast() {
+        lastSavedRecordingPath = nil
+    }
+
+    private func installRecordTapIfNeeded() {
+        guard let rm = recordMixer, !recordTapInstalled else { return }
+        let node = rm.avAudioNode
+        let bus = 0
+        let format = node.outputFormat(forBus: bus)
+        guard format.sampleRate > 0 else { return }
+        node.installTap(onBus: bus, bufferSize: 4_096, format: format) { [weak self] buffer, _ in
+            self?.appendRecordingBuffer(buffer)
+        }
+        recordTapInstalled = true
+    }
+
+    private func appendRecordingBuffer(_ buffer: AVAudioPCMBuffer) {
+        recordIOQueue.async { [weak self] in
+            guard let self, let file = self.recordingFile else { return }
+            do {
+                try file.write(from: buffer)
+            } catch {
+                print("[VoiceTool] Recording write failed: \(error)")
+            }
+        }
     }
 
     // MARK: - LPC pipeline

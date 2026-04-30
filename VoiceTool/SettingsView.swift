@@ -15,6 +15,12 @@ import AppKit
 /// iOS：作为 sheet 从主界面弹出。
 struct SettingsView: View {
 
+    @ObservedObject private var folderStore = RecordingFolderStore.shared
+#if os(iOS) || os(visionOS)
+    @State private var showRecordingFolderPicker = false
+#endif
+    @State private var showResetRecordingFolderConfirm = false
+
     @AppStorage("showF1")  private var showF1:  Bool   = true
     @AppStorage("showF2")  private var showF2:  Bool   = true
     @AppStorage("f0Min")   private var f0Min:   Double = 50
@@ -41,6 +47,32 @@ struct SettingsView: View {
                 Toggle("Show F2 Formant", isOn: $showF2)
             } header: {
                 Text("Display")
+            }
+
+            Section {
+                if folderStore.hasBookmark {
+                    Label("Recording folder saved", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Choose a folder for FormantScope WAV recordings.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+#if os(macOS)
+                Button("Choose recording folder…") {
+                    chooseRecordingFolderMac()
+                }
+#elseif os(iOS) || os(visionOS)
+                Button("Choose recording folder…") {
+                    showRecordingFolderPicker = true
+                }
+#endif
+                Button("Reset recording folder", role: .destructive) {
+                    showResetRecordingFolderConfirm = true
+                }
+                .disabled(!folderStore.hasBookmark)
+            } header: {
+                Text("Recordings")
             }
 
             Section {
@@ -71,6 +103,16 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .confirmationDialog(
+            "Reset saved recording folder?",
+            isPresented: $showResetRecordingFolderConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Reset", role: .destructive) { folderStore.clearBookmark() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Next time you record, you will be asked to choose a folder again.")
+        }
         .textSelection(.enabled)
         .onAppear { syncAxisTextFields() }
         .onChange(of: focusedAxisField) { _, newField in
@@ -79,8 +121,18 @@ struct SettingsView: View {
             }
             lastFocusedAxisField = newField
         }
+#if os(iOS) || os(visionOS)
+        .sheet(isPresented: $showRecordingFolderPicker) {
+            RecordingFolderPicker(
+                isPresented: $showRecordingFolderPicker,
+                onFolderPicked: { url in
+                    try? folderStore.saveBookmark(for: url)
+                }
+            )
+        }
+#endif
 #if os(macOS)
-        .frame(width: 310, height: 390)
+        .frame(width: 310, height: 460)
 #endif
     }
 
@@ -148,6 +200,19 @@ struct SettingsView: View {
     private func formatHz(_ value: Double) -> String {
         value.rounded() == value ? String(format: "%.0f", value) : String(format: "%.1f", value)
     }
+
+#if os(macOS)
+    private func chooseRecordingFolderMac() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Choose"
+        panel.message = "Choose a folder for FormantScope recordings"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        try? folderStore.saveBookmark(for: url)
+    }
+#endif
 }
 
 #if os(macOS)
