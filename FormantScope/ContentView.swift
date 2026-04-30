@@ -8,6 +8,9 @@
 import SwiftUI
 import AVFoundation
 import Charts
+#if os(iOS)
+import UIKit
+#endif
 #if os(macOS)
 import AppKit
 #endif
@@ -55,7 +58,15 @@ struct ContentView: View {
             // MARK: 自适应布局参数（基于真实 geo.size 实时计算）
             let hScale: CGFloat = max(0.5, min(1.4, geo.size.height / 640))
             let wScale: CGFloat = max(0.5, min(1.4, geo.size.width  / 400))
-            let chartHeight:           CGFloat = max(120, 320 * hScale)
+#if os(iOS)
+            /// iPad：抬高图表主区高度；`cardFrame` 变大后 `BackgroundVoiceChart.yDomain` 自动重算，曲线覆盖区域同步。
+            let isPad = UIDevice.current.userInterfaceIdiom == .pad
+            let chartHScale: CGFloat = max(0.5, min(isPad ? 1.95 : 1.4, geo.size.height / 640))
+            let chartHeightBase: CGFloat = isPad ? 400 : 320
+            let chartHeight: CGFloat = max(isPad ? 160 : 120, chartHeightBase * chartHScale)
+#else
+            let chartHeight: CGFloat = max(120, 320 * hScale)
+#endif
             let spacerReadoutToChart:  CGFloat = max(8,   40  * hScale)
             let spacerChartToBar:      CGFloat = max(4,   12  * hScale)
             let buttonBottomPad:       CGFloat = max(12,  48  * hScale)
