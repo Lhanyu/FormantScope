@@ -81,6 +81,8 @@ FormantScope/
 │   └── project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 ├── FormantScopeTests/
 ├── FormantScopeUITests/
+├── LICENSE
+├── README.md
 └── docs/
 ```
 
@@ -104,12 +106,14 @@ Dependencies resolve via **Swift Package Manager**: add the **SoundpipeAudioKit*
 
 #### Run
 
-1. Open `FormantScope.xcodeproj` in **Xcode on a Mac** (the project is built and run from macOS).  
-2. Select the **FormantScope** scheme.  
-3. Pick a **run destination** in the Xcode toolbar: **iOS Simulator**, a connected **iPhone/iPad**, or **My Mac** for the native macOS build, then **Run** (⌘R).  
-4. Grant microphone access when prompted.  
-5. Tap **Start Listening**.  
-6. Optional: **Settings** → choose recording folder; while listening use **Record** / **Stop Recording** to capture WAV.  
+Build and run **on a Mac using Xcode**:
+
+1. Open `FormantScope.xcodeproj`  
+2. Select the **FormantScope** scheme  
+3. Pick a **run destination**: **My Mac**, an **iOS Simulator**, or a connected **iOS device** — then Product → Run (**⌘R**)  
+4. Grant microphone access when prompted  
+5. Tap **Start Listening**  
+6. Optional: **Settings** → choose recording folder; while listening use **Record** / **Stop Recording** to capture WAV  
 
 ### Contributing
 
@@ -117,7 +121,7 @@ Contributions are welcome. For substantial changes, please open an issue first t
 
 ### License
 
-Add a `LICENSE` file when you publish (MIT and Apache-2.0 are common choices for small Swift utilities).
+This project is released under the [MIT License](LICENSE).
 
 ---
 
@@ -181,14 +185,16 @@ F1/F2：独立的保持帧与单帧最大跳变，抑制毛刺与高阶共振峰
 
 ### 快速开始
 
-1. 在 **Mac** 上用 Xcode 打开 `FormantScope.xcodeproj`（工程始终在 macOS 上编译）。  
-2. 选择 **FormantScope** scheme。  
-3. 在 Xcode 工具栏中选择**运行目标**：**iOS 模拟器**、已连接的 **iPhone/iPad**，或 **My Mac**（原生 macOS 产物），然后**运行**（⌘R）。  
-4. 授予麦克风权限。  
-5. **开始聆听**；若需录音，先在设置中选目录，再点 **Record**。  
+在 **Mac 上用 Xcode 编译并运行**：
+
+1. 打开 `FormantScope.xcodeproj`  
+2. 选择 **FormantScope** scheme  
+3. 在 Xcode 中选 **运行目标**：**My Mac（本机）**、**iOS 模拟器** 或 **已连接的 iOS 设备**，再 **⌘R** 运行  
+4. 授予麦克风权限  
+5. **开始聆听**；若需录音，先在设置中选目录，再点 **Record**  
 
 **系统要求**：Xcode 16+；应用目标为 **iOS 17+**、**macOS 14+**。
 
 ### 许可
 
-对外发布时请自行添加 `LICENSE`（常见为 MIT 或 Apache-2.0）。
+本项目以 [MIT 许可证](LICENSE) 开源。
