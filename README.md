@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="docs/example-en.png" title="Open full-size screenshot">
-    <img src="docs/example-en.png" alt="FormantScope main screen (English labels)" width="420" />
+    <img src="docs/example-en.png" alt="FormantScope main screen (English labels)" width="300" />
   </a>
 </p>
 
@@ -140,7 +140,7 @@ Released under the [MIT License](LICENSE).
 
 <p align="center">
   <a href="docs/example-zh.png" title="查看大图">
-    <img src="docs/example-zh.png" alt="FormantScope 主界面（中文标注）" width="420" />
+    <img src="docs/example-zh.png" alt="FormantScope 主界面（中文标注）" width="300" />
   </a>
 </p>
 
