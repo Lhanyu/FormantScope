@@ -14,6 +14,10 @@ import AppKit
 
 struct ContentView: View {
 
+#if os(iOS)
+    @Environment(\.scenePhase) private var scenePhase
+#endif
+
     @StateObject private var analyzer = AudioAnalyzer()
     @ObservedObject private var folderStore = RecordingFolderStore.shared
     @State private var isRunning = false
@@ -36,9 +40,13 @@ struct ContentView: View {
     @AppStorage("fmtMin")  private var fmtMin:  Double = 200
     @AppStorage("fmtMax")  private var fmtMax:  Double = 3_500
 
-#if os(iOS) || os(visionOS)
+#if os(iOS)
     @State private var showSettings = false
 #endif
+
+    private var controlRoomSpring: Animation {
+        .spring(response: 0.42, dampingFraction: 0.86)
+    }
 
     var body: some View {
         // 最外层 GeometryReader：第一帧就能拿到真实窗口尺寸，
@@ -201,8 +209,6 @@ struct ContentView: View {
 
                     /// 底部：全宽大条在 **右侧槽**（开始聆听）；一分为二时左=录音、右=停止聆听，
                     /// 宽度从左槽 0→半宽、右槽全宽→半宽，大条视感收到 **右侧** 与「停止聆听」对应。
-                    let controlRoomSpring = Animation.spring(response: 0.42, dampingFraction: 0.86)
-
                     GeometryReader { innerGeo in
                         let gap: CGFloat = isRunning ? 12 : 0
                         let totalW = innerGeo.size.width
@@ -244,12 +250,7 @@ struct ContentView: View {
 
                             Button {
                                 if isRunning {
-                                    withAnimation(controlRoomSpring) {
-                                        isRecordingArmed = false
-                                        analyzer.endRecording()
-                                        analyzer.stop()
-                                        isRunning = false
-                                    }
+                                    stopListeningSameAsStopButton()
                                 } else {
                                     withAnimation(controlRoomSpring) {
                                         isRecordingArmed = false
@@ -298,6 +299,12 @@ struct ContentView: View {
             .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
             .onPreferenceChange(ControlStripFrameKey.self) { controlStripFrame = $0 }
             .onAppear { requestMicrophonePermission() }
+#if os(iOS)
+            .onChange(of: scenePhase) { _, newPhase in
+                guard newPhase == .background, isRunning else { return }
+                stopListeningSameAsStopButton()
+            }
+#endif
             .animation(.spring(response: 0.35, dampingFraction: 0.88), value: analyzer.lastSavedRecordingPath)
             .onChange(of: analyzer.lastSavedRecordingPath) { _, newPath in
                 guard let path = newPath else { return }
@@ -341,8 +348,8 @@ struct ContentView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-#if os(iOS) || os(visionOS)
-            // iOS / visionOS：设置入口与录音目录选择
+#if os(iOS)
+            // iOS：设置入口与录音目录选择
             .overlay(alignment: .topTrailing) {
                 Button { showSettings = true } label: {
                     Image(systemName: "line.3.horizontal")
@@ -378,6 +385,17 @@ struct ContentView: View {
     }
 
     // MARK: - Helpers
+
+    /// 与「停止聆听」按钮相同：结束录音（落盘）、停止引擎、更新 UI。
+    private func stopListeningSameAsStopButton() {
+        withAnimation(controlRoomSpring) {
+            isRecordingArmed = false
+            pendingArmRecordAfterPick = false
+            analyzer.endRecording()
+            analyzer.stop()
+            isRunning = false
+        }
+    }
 
     private func toggleRecordingArmed() {
         guard isRunning else { return }

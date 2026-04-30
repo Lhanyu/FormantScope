@@ -16,7 +16,7 @@ import AppKit
 struct SettingsView: View {
 
     @ObservedObject private var folderStore = RecordingFolderStore.shared
-#if os(iOS) || os(visionOS)
+#if os(iOS)
     @State private var showRecordingFolderPicker = false
 #endif
     @State private var showResetRecordingFolderConfirm = false
@@ -62,7 +62,7 @@ struct SettingsView: View {
                 Button("Choose recording folder…") {
                     chooseRecordingFolderMac()
                 }
-#elseif os(iOS) || os(visionOS)
+#elseif os(iOS)
                 Button("Choose recording folder…") {
                     showRecordingFolderPicker = true
                 }
@@ -121,7 +121,7 @@ struct SettingsView: View {
             }
             lastFocusedAxisField = newField
         }
-#if os(iOS) || os(visionOS)
+#if os(iOS)
         .sheet(isPresented: $showRecordingFolderPicker) {
             RecordingFolderPicker(
                 isPresented: $showRecordingFolderPicker,

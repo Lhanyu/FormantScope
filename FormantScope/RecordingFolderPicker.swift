@@ -4,7 +4,7 @@
 //
 //  iOS：系统文件夹选取器。macOS：见 SettingsView 内 NSOpenPanel。
 
-#if os(iOS) || os(visionOS)
+#if os(iOS)
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
