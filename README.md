@@ -104,28 +104,12 @@ Dependencies resolve via **Swift Package Manager**: add the **SoundpipeAudioKit*
 
 #### Run
 
-1. Open `FormantScope.xcodeproj`  
-2. Select the **FormantScope** scheme  
-3. Run on iOS Simulator/device or Mac  
-4. Grant microphone access when prompted  
-5. Tap **Start Listening**  
-6. Optional: **Settings** → choose recording folder; while listening use **Record** / **Stop Recording** to capture WAV  
-
-### Roadmap / quality plan
-
-- [ ] Improve test coverage for DSP helpers and graph lifecycle  
-- [ ] Synthetic-signal regression tests for F0/F1/F2 stability  
-- [ ] Document parameter tuning for researchers  
-- [ ] Optional CSV (or similar) export alongside WAV  
-- [ ] Contribution templates and issue labels  
-
-### App Store / TestFlight checklist (short)
-
-1. **Bundle & signing** — Bundle ID, team, entitlements (mic, sandbox, user-selected folder on Mac)  
-2. **Privacy** — microphone usage string (see `InfoPlist.xcstrings`); App Store Connect privacy labels  
-3. **Export compliance** — `ITSAppUsesNonExemptEncryption = NO` (set in target build settings)  
-4. **Archive & upload** — Product → Archive → Distribute  
-5. **TestFlight** then App Store metadata and review notes  
+1. Open `FormantScope.xcodeproj` in **Xcode on a Mac** (the project is built and run from macOS).  
+2. Select the **FormantScope** scheme.  
+3. Pick a **run destination** in the Xcode toolbar: **iOS Simulator**, a connected **iPhone/iPad**, or **My Mac** for the native macOS build, then **Run** (⌘R).  
+4. Grant microphone access when prompted.  
+5. Tap **Start Listening**.  
+6. Optional: **Settings** → choose recording folder; while listening use **Record** / **Stop Recording** to capture WAV.  
 
 ### Contributing
 
@@ -197,26 +181,13 @@ F1/F2：独立的保持帧与单帧最大跳变，抑制毛刺与高阶共振峰
 
 ### 快速开始
 
-1. 用 Xcode 打开 `FormantScope.xcodeproj`  
-2. 选择 **FormantScope** scheme  
-3. 在模拟器、真机或 Mac 上运行  
-4. 授予麦克风权限  
-5. **开始聆听**；若需录音，先在设置中选目录，再点 **Record**  
+1. 在 **Mac** 上用 Xcode 打开 `FormantScope.xcodeproj`（工程始终在 macOS 上编译）。  
+2. 选择 **FormantScope** scheme。  
+3. 在 Xcode 工具栏中选择**运行目标**：**iOS 模拟器**、已连接的 **iPhone/iPad**，或 **My Mac**（原生 macOS 产物），然后**运行**（⌘R）。  
+4. 授予麦克风权限。  
+5. **开始聆听**；若需录音，先在设置中选目录，再点 **Record**。  
 
 **系统要求**：Xcode 16+；应用目标为 **iOS 17+**、**macOS 14+**。
-
-### 后续建议
-
-- 为 LPC 与引擎启停补充单元测试 / 合成信号回归  
-- 可选导出 CSV 等会话数据（当前已有 WAV）  
-- 撰写参数调优说明与开源协作模板  
-
-### 上架提示（简版）
-
-1. Bundle ID、签名、权能（麦克风、沙盒、用户所选文件夹等）  
-2. 麦克风说明文案（`InfoPlist.xcstrings`）与 App Store 隐私问卷  
-3. `ITSAppUsesNonExemptEncryption = NO`  
-4. Archive 上传与 TestFlight 内测  
 
 ### 许可
 
