@@ -623,11 +623,10 @@ final class AudioAnalyzer: ObservableObject {
     // MARK: - LPC helpers
 
     /// 预加重滤波：y[n] = x[n] - α·x[n-1]。
-    /// 语音识别常用 α=0.97，但共振峰分析应使用 α≈0（不预加重）：
-    /// 预加重使 F1（~500 Hz）仅剩 ~6%（α=0.97）或 ~30%（α=0.70），
-    /// LPC 会把极点全部分配给高频，导致 F1/F2 峰消失。
-    /// 默认 α=0 即直接透传，声道谱包络保持自然衰减形态，共振峰更清晰。
-    private func preEmphasis(_ x: [Float], alpha: Float = 0.0) -> [Float] {
+    /// α=0.97 是共振峰分析的标准选择（Praat 等同样默认预加重）：
+    /// 抵消声门源 −6 dB/oct 的频谱倾斜，避免低频能量主导 LPC，使各阶
+    /// 极点更均衡地落在 F1/F2/F3 上、谱包络峰更锐利。
+    private func preEmphasis(_ x: [Float], alpha: Float = 0.97) -> [Float] {
         guard alpha > 0 else { return x }  // alpha=0 时直接跳过，避免无效计算
         var y = x
         for i in stride(from: y.count - 1, through: 1, by: -1) {
