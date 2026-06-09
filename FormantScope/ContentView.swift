@@ -438,11 +438,10 @@ struct ContentView: View {
         do {
             try analyzer.beginRecordingToUserFolder(store: folderStore)
             isRecordingArmed = true
-        } catch {
-            if let folderErr = error as? RecordingFolderError {
-                if case .staleBookmark = folderErr {
-                    folderStore.clearBookmark()
-                }
+        } catch let folderErr as RecordingFolderError {
+            // 仅「目录类」错误才值得重新弹出选择器：书签失效/无目录/访问被拒。
+            if case .staleBookmark = folderErr {
+                folderStore.clearBookmark()
             }
             pendingArmRecordAfterPick = true
 #if os(macOS)
@@ -450,6 +449,12 @@ struct ContentView: View {
 #else
             showFolderPicker = true
 #endif
+        } catch {
+            // 引擎未启动 / 音频图未就绪 / 输出格式无效（RecordingError）等：
+            // 重选目录无济于事，重弹选择器会形成死循环（macOS runModal 递归）。
+            // 直接停止本次重试，保留已存书签。
+            pendingArmRecordAfterPick = false
+            isRecordingArmed = false
         }
     }
 
@@ -459,16 +464,13 @@ struct ContentView: View {
             if pendingArmRecordAfterPick {
                 pendingArmRecordAfterPick = false
                 if isRunning {
+                    // 目录刚选好且已写入书签；若此处仍失败，几乎必为非目录错误
+                    // （引擎/格式），不再重弹选择器，避免死循环。
                     do {
                         try analyzer.beginRecordingToUserFolder(store: folderStore)
                         isRecordingArmed = true
                     } catch {
-                        pendingArmRecordAfterPick = true
-#if os(macOS)
-                        presentMacRecordingFolderPicker()
-#else
-                        showFolderPicker = true
-#endif
+                        isRecordingArmed = false
                     }
                 }
             }

@@ -431,8 +431,10 @@ final class AudioAnalyzer: ObservableObject {
             recordingScopedParentURL = nil
         }
         if let path = pathToAnnounce {
-            Task { @MainActor in
-                self.lastSavedRecordingPath = path
+            // [weak self]：endRecording 可能由 deinit → stop() 触发，此时 self 正在析构，
+            // 强引用会让该 Task 延长 self 生命周期并在释放后访问内存（UAF）。
+            Task { @MainActor [weak self] in
+                self?.lastSavedRecordingPath = path
             }
         }
     }

@@ -10,7 +10,11 @@ import SwiftUI
 @main
 struct FormantScopeApp: App {
     init() {
+        // 仅在 DEBUG 构建里过滤 Xcode 控制台噪声：
+        // 发布版不应改动 stderr，以免吞掉崩溃回溯（crash backtrace 在进程终止前写 stderr）。
+#if DEBUG
         suppressCoreAudioXPCNoise()
+#endif
     }
 
     var body: some Scene {
@@ -54,9 +58,12 @@ private struct DisplayCommands: Commands {
 
 // MARK: - stderr 噪声过滤
 
+#if DEBUG
 /// CoreAudio / XPC 产生的 NSXPCDecoder 警告走 NSLog → stderr（*** 开头），
 /// 无法通过 OS_ACTIVITY_DT_MODE 抑制。此函数将 stderr 接入过滤管道：
 /// 含噪声关键词的行直接丢弃，其余行写回原始 stderr，print() 走 stdout 完全不受影响。
+///
+/// 仅 DEBUG 构建启用：发布版改动 stderr 可能吞掉崩溃回溯，得不偿失。
 ///
 /// 注意：AudioEngine start/stop 时产生的 os_log 走统一日志系统，不经过 stderr，
 /// 需在 Xcode scheme → Run → Arguments → Environment Variables 中加入：
@@ -84,7 +91,12 @@ private func suppressCoreAudioXPCNoise() {
 
         while true {
             let n = read(readFd, &chunk, chunk.count)
-            guard n > 0 else { break }
+            if n < 0 {
+                // EINTR/EAGAIN 是瞬时错误，重试；其余致命错误才退出。
+                if errno == EINTR || errno == EAGAIN { continue }
+                break
+            }
+            if n == 0 { break }       // 真正的 EOF（写端全部关闭，正常进程内不会发生）
             pending.append(contentsOf: chunk[..<n])
 
             // 逐行处理（保留不以换行结尾的末尾碎片留到下次）
@@ -110,6 +122,10 @@ private func suppressCoreAudioXPCNoise() {
 
         // 写出残余未换行内容
         if !pending.isEmpty { origOut.write(pending) }
+        // 致命错误导致退出过滤：把 stderr 接回原始 fd，避免后续写入命中已关闭的
+        // 管道读端而触发 EPIPE/SIGPIPE 杀死进程。
+        dup2(origFd, STDERR_FILENO)
         close(readFd)
     }
 }
+#endif
