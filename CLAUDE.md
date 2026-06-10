@@ -6,7 +6,8 @@ Guidance for Claude Code when working in this repository.
 
 FormantScope — a SwiftUI app (iOS 17+ / macOS 14+) that captures live microphone
 input and shows real-time speech acoustics: F0 (pitch), F1/F2 (formants), and an
-amplitude level, with a rolling ~100-frame history chart.
+amplitude level, plotted on a rolling, time-windowed history chart (default 8 s,
+adjustable 2–20 s) with a per-readout window average.
 
 - Bundle id: `com.yueranwang.formantscope`
 - Single shared target `FormantScope` builds for both iOS and macOS.
@@ -78,6 +79,27 @@ Mic ──► PitchTap (F0 + amplitude, callback on main)
   built in `init()`. Keep this split.
 - F0 = AudioKitEX PitchTap (AUBIO). F1/F2 = custom LPC in `processLPC`.
 
+### Timestamped history model
+
+History is **not** a fixed-length frame array. Each curve (`pitchHistory`,
+`f1History`, `f2History`) is `[TimedSample]` where `t` comes from a **session
+logical clock** = monotonic `systemUptime` − accumulated paused duration. The
+clock does not advance while stopped, so after stop→start the first new sample
+abuts the last old one and the curve continues seamlessly (no left-shift / no
+slope across the pause). `historyRetainSeconds` (30 s) bounds memory; the chart
+renders a real-time window (`timeWindowSec`) so spans are identical across
+devices regardless of sample rate. Don't reintroduce frame-index history.
+
+### Input route / configuration changes
+
+`AudioAnalyzer` observes `AVAudioEngineConfigurationChange` (input-source switch,
+sample-rate/channel change, device plug/unplug). On that event it calls `stop()`
+and bumps `autoStopSignal`; `ContentView` watches that counter and resets the UI
+to idle (button → Start, recording disarmed). The frozen curve stays put because
+history isn't cleared. This is the only sanctioned reaction to a route change —
+don't try to hot-rebuild the graph in place (that's what caused the earlier
+"freezes for a beat, then misbehaves" symptom with AirPods).
+
 ### Threading model — respect it
 
 - PitchTap callback runs on **main**; it writes `@Published` pitch/amplitude/history directly.
@@ -96,8 +118,8 @@ Mic ──► PitchTap (F0 + amplitude, callback on main)
 - Platform differences use `#if os(iOS)` / `#if os(macOS)` inline. Several tuning
   constants differ by platform (amplitude gates, RMS threshold, audio session).
 - Persisted user settings use `@AppStorage`. Keys (`showF1`, `showF2`, `f0Min`,
-  `f0Max`, `fmtMin`, `fmtMax`) and their defaults are duplicated between
-  `ContentView` and `SettingsView` — if you change a default, change both.
+  `f0Max`, `fmtMin`, `fmtMax`, `timeWindowSec`) and their defaults are duplicated
+  between `ContentView` and `SettingsView` — if you change a default, change both.
 - DSP uses Accelerate (vDSP) where it matters; keep hot paths off naive loops.
 
 ## Gotchas / known sharp edges
@@ -109,6 +131,22 @@ Mic ──► PitchTap (F0 + amplitude, callback on main)
 - **Security-scoped recording folder**: the caller (`AudioAnalyzer`) must balance
   `startAccessingSecurityScopedResource` (in `beginRecording…`) with `stop` (in
   `endRecording`). If recording errors out, make sure access is still released.
+- **Record tap must use `format: nil`** (`installRecordTapOnQueue`): Bluetooth
+  input (AirPods) drops to HFP and the hardware sample rate falls (e.g. 16 kHz)
+  while `recordMixer` still reports 48 kHz. Passing an explicit 48 kHz format to
+  `installTap` fails the engine's `format.sampleRate == inputHWFormat.sampleRate`
+  assertion and throws an NSException (swallowed on main = "frozen"; on a
+  background queue = process kill). `nil` skips that check, matching
+  PitchTap/RawDataTap. The WAV file is therefore created **lazily** from the first
+  buffer's real format in `appendRecordingBuffer`, not pre-built. The record tap
+  is **resident** (installed on first record, never `removeTap`'d); idle buffers
+  are dropped by the `recordingFile == nil` guard. Don't install/remove the record
+  tap inside `start()`/`stop()`.
+- **AirPods gate sustained tones** (not an app bug): HFP firmware VAD + noise
+  suppression treats a stationary tone as background noise and gates it after
+  ~1–2 s, so a held vowel's F0/F1/F2 curve drops out. Happens in every app; the
+  config is already optimal (`.measurement`, no VoiceProcessingIO). Only fix is a
+  full-bandwidth mic (built-in / wired). Left as-is by user decision.
 - **Chart coordinate mapping** (`ContentView` `BackgroundVoiceChart`): the chart's
   Y domain is dynamically expanded so normalized [0,1] aligns to the foreground
   card frame reported via `PreferenceKey`. The `yDomain` guards degenerate frames —

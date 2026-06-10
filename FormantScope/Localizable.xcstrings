@@ -112,6 +112,7 @@
       }
     },
     "Frame" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -271,6 +272,9 @@
         }
       }
     },
+    "Seconds of history shown in the chart and averaged under each readout (2–20 s)." : {
+
+    },
     "Settings" : {
       "localizations" : {
         "zh-Hans" : {
@@ -331,6 +335,9 @@
         }
       }
     },
+    "t" : {
+
+    },
     "Tap to dismiss" : {
       "localizations" : {
         "zh-Hans" : {
@@ -340,6 +347,12 @@
           }
         }
       }
+    },
+    "Time Window" : {
+
+    },
+    "Window" : {
+
     }
   },
   "version" : "1.0"

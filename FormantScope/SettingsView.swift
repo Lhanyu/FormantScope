@@ -27,16 +27,18 @@ struct SettingsView: View {
     @AppStorage("f0Max")   private var f0Max:   Double = 600
     @AppStorage("fmtMin")  private var fmtMin:  Double = 200
     @AppStorage("fmtMax")  private var fmtMax:  Double = 3_500
+    @AppStorage("timeWindowSec") private var timeWindowSec: Double = 8
 
     @State private var f0MinText  = ""
     @State private var f0MaxText  = ""
     @State private var fmtMinText = ""
     @State private var fmtMaxText = ""
+    @State private var timeWindowText = ""
     @State private var lastFocusedAxisField: AxisField?
     @FocusState private var focusedAxisField: AxisField?
 
     private enum AxisField: Hashable {
-        case f0Min, f0Max, fmtMin, fmtMax
+        case f0Min, f0Max, fmtMin, fmtMax, timeWindow
     }
 
     private enum AppLinks {
@@ -93,12 +95,21 @@ struct SettingsView: View {
                 Text("Formant Axis – F1 / F2")
             }
 
+            Section {
+                rangeRow("Window", text: $timeWindowText, field: .timeWindow, placeholder: "8", unit: "s")
+            } header: {
+                Text("Time Window")
+            } footer: {
+                Text("Seconds of history shown in the chart and averaged under each readout (2–20 s).")
+            }
+
             // MARK: 恢复默认
             Section {
                 Button(role: .destructive) {
                     showF1 = true;  showF2 = true
                     f0Min  = 50;    f0Max  = 600
                     fmtMin = 200;   fmtMax = 3_500
+                    timeWindowSec = 8
                     syncAxisTextFields()
                 } label: {
                     Text("Reset to Defaults")
@@ -144,7 +155,7 @@ struct SettingsView: View {
         }
 #endif
 #if os(macOS)
-        .frame(width: 310, height: 540)
+        .frame(width: 310, height: 620)
 #endif
     }
 
@@ -155,7 +166,8 @@ struct SettingsView: View {
     private func rangeRow(_ title: LocalizedStringKey,
                           text: Binding<String>,
                           field: AxisField,
-                          placeholder: String) -> some View {
+                          placeholder: String,
+                          unit: LocalizedStringKey = "Hz") -> some View {
         HStack(spacing: 8) {
             Text(title)
             Spacer()
@@ -172,7 +184,7 @@ struct SettingsView: View {
                 .keyboardType(.decimalPad)
                 .frame(width: 100)
 #endif
-            Text("Hz")
+            Text(unit)
                 .foregroundStyle(.secondary)
         }
     }
@@ -182,6 +194,7 @@ struct SettingsView: View {
         f0MaxText  = formatHz(f0Max)
         fmtMinText = formatHz(fmtMin)
         fmtMaxText = formatHz(fmtMax)
+        timeWindowText = formatHz(timeWindowSec)
     }
 
     private func commitAxisField(_ field: AxisField) {
@@ -194,6 +207,8 @@ struct SettingsView: View {
             commit($fmtMinText, to: &fmtMin, isValid: { $0 < fmtMax })
         case .fmtMax:
             commit($fmtMaxText, to: &fmtMax, isValid: { $0 > fmtMin })
+        case .timeWindow:
+            commit($timeWindowText, to: &timeWindowSec, isValid: { $0 >= 2 && $0 <= 20 })
         }
     }
 

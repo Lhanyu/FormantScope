@@ -42,6 +42,9 @@ struct ContentView: View {
     @AppStorage("f0Max")   private var f0Max:   Double = 600
     @AppStorage("fmtMin")  private var fmtMin:  Double = 200
     @AppStorage("fmtMax")  private var fmtMax:  Double = 3_500
+    /// 图表显示的时间窗（秒）。规范化跨设备跨度：图表按真实时间轴渲染最近这么多秒，
+    /// 不再依赖随采样率漂移的帧索引。同时也是 F0/F1/F2 读数下方"窗内平均"的统计范围。
+    @AppStorage("timeWindowSec") private var timeWindowSec: Double = 8
 
 #if os(iOS)
     @State private var showSettings = false
@@ -138,7 +141,8 @@ struct ContentView: View {
                     f0Min:        f0Min,
                     f0Max:        f0Max,
                     fmtMin:       fmtMin,
-                    fmtMax:       fmtMax
+                    fmtMax:       fmtMax,
+                    windowSeconds: timeWindowSec
                 )
 
                 // ===== Layer 1：主区卡片底色 =====
@@ -158,6 +162,7 @@ struct ContentView: View {
                         FrequencyReadout(
                             label: "F0 Fundamental",
                             value: analyzer.pitch,
+                            average: windowAverage(analyzer.pitchHistory),
                             color: .red,
                             labelSize: readoutLabelFontFinal,
                             valueSize: readoutValueFontFinal,
@@ -172,6 +177,7 @@ struct ContentView: View {
                             FrequencyReadout(
                                 label: "F1 Formant",
                                 value: analyzer.f1,
+                                average: windowAverage(analyzer.f1History),
                                 color: .blue,
                                 labelSize: readoutLabelFontFinal,
                                 valueSize: readoutValueFontFinal,
@@ -187,6 +193,7 @@ struct ContentView: View {
                             FrequencyReadout(
                                 label: "F2 Formant",
                                 value: analyzer.f2,
+                                average: windowAverage(analyzer.f2History),
                                 color: .green,
                                 labelSize: readoutLabelFontFinal,
                                 valueSize: readoutValueFontFinal,
@@ -317,6 +324,17 @@ struct ContentView: View {
             .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
             .onPreferenceChange(ControlStripFrameKey.self) { controlStripFrame = $0 }
             .onAppear { requestMicrophonePermission() }
+            .onChange(of: analyzer.autoStopSignal) { _, _ in
+                // 输入源/音频路由变化导致引擎被系统停止：analyzer 已自行 stop()。
+                // 这里只需把界面复位到初始态（按钮回 Start、解除录音武装），
+                // 曲线因不再有新样本且历史未清空而自然冻结，与手动「停止聆听」一致。
+                guard isRunning else { return }
+                withAnimation(controlRoomSpring) {
+                    isRecordingArmed = false
+                    pendingArmRecordAfterPick = false
+                    isRunning = false
+                }
+            }
 #if os(iOS)
             .onChange(of: scenePhase) { _, newPhase in
                 guard newPhase == .background, isRunning else { return }
@@ -403,6 +421,19 @@ struct ContentView: View {
     }
 
     // MARK: - Helpers
+
+    /// 计算某条带时间戳历史在当前时间窗内的平均值（仅统计有声、非 nil 的样本）。
+    /// 窗口右端取该路最后一个样本的时间戳（与图表 referenceNow 一致），无有声样本时返回 nil。
+    private func windowAverage(_ history: [AudioAnalyzer.TimedSample]) -> Float? {
+        guard let last = history.last?.t else { return nil }
+        let cutoff = last - timeWindowSec
+        var sum: Float = 0
+        var count = 0
+        for s in history where s.t >= cutoff {
+            if let v = s.value { sum += v; count += 1 }
+        }
+        return count > 0 ? sum / Float(count) : nil
+    }
 
     /// 与「停止聆听」按钮相同：结束录音（落盘）、停止引擎、更新 UI。
     private func stopListeningSameAsStopButton() {
@@ -544,6 +575,8 @@ private struct ControlStripFrameKey: PreferenceKey {
 private struct FrequencyReadout: View {
     let label: LocalizedStringKey
     let value: Float
+    /// 时间窗内平均值（Hz）；nil 表示窗内无有声样本，此时不显示平均行。
+    var average: Float? = nil
     let color: Color
     var labelSize: CGFloat = 12
     var valueSize: CGFloat = 48
@@ -551,6 +584,11 @@ private struct FrequencyReadout: View {
 
     private var displayText: String {
         value > 0 ? String(format: "%.0f", value) : "---"
+    }
+
+    private var averageText: String? {
+        guard let average, average > 0 else { return nil }
+        return String(format: "avg %.0f", average)
     }
 
     var body: some View {
@@ -577,6 +615,17 @@ private struct FrequencyReadout: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
+
+            // 窗内平均（小字副行）。窗内无有声样本时整行隐藏，避免静音时一排 "avg ---"。
+            Text(averageText ?? " ")
+                .font(.system(size: unitSize, weight: .medium, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(color.opacity(0.7))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .opacity(averageText == nil ? 0 : 1)
+                .contentTransition(.numericText())
+                .animation(.spring(duration: 0.2), value: average)
         }
         .frame(maxWidth: .infinity)
         .textSelection(.enabled)
@@ -636,9 +685,9 @@ private struct AmplitudeBar: View {
 // 由前景 UI 的 z 序覆盖来确保不"反向遮挡"读数 / 能量条 / 按钮。
 private struct BackgroundVoiceChart: View {
 
-    let pitchHistory: [Float?]
-    let f1History:    [Float?]
-    let f2History:    [Float?]
+    let pitchHistory: [AudioAnalyzer.TimedSample]
+    let f1History:    [AudioAnalyzer.TimedSample]
+    let f2History:    [AudioAnalyzer.TimedSample]
     /// 主区卡片在 "rootSpace" 坐标系的 frame；高度 0 表示尚未完成首次布局
     let cardFrame: CGRect
     /// ZStack 根容器尺寸，用来计算 Y 域上下沿对应屏幕顶/底的归一化值
@@ -651,6 +700,8 @@ private struct BackgroundVoiceChart: View {
     let f0Max:   Double
     let fmtMin:  Double
     let fmtMax:  Double
+    /// 显示的时间窗（秒）：X 轴域为 -windowSeconds ... 0，0 = 最新样本时刻。
+    let windowSeconds: Double
 
     // MARK: - 归一化（实例方法，使用传入的轴范围）
 
@@ -691,25 +742,28 @@ private struct BackgroundVoiceChart: View {
 
     private struct DataPoint: Identifiable {
         let id: Int
-        let index: Int
+        /// 相对最新样本时刻的秒偏移（0 = 最新，负值向左）。
+        let x: Double
         let norm: Double
         let segment: Int
     }
 
-    /// 构造数据点：保持原有的 nil 分段逻辑，但不再把 norm clamp 到 [0,1]，
-    /// 而是 clamp 到当前扩展 Y 域，让超量程值仍可见且不会被裁出图表 frame。
-    private func makePoints(_ history: [Float?],
+    /// 构造数据点：保持原有的 nil 分段逻辑，但 X 改为相对 referenceNow 的秒偏移（时间轴），
+    /// 不再用帧索引。Y 仍 clamp 到当前扩展 Y 域，让超量程值可见且不被裁出 frame。
+    private func makePoints(_ history: [AudioAnalyzer.TimedSample],
+                            referenceNow: Double,
                             norm: (Double) -> Double,
                             yMin: Double,
                             yMax: Double) -> [DataPoint] {
         var result: [DataPoint] = []
         var segmentID = 0
         var prevWasNil = true
-        for (index, value) in history.enumerated() {
-            guard let f = value else { prevWasNil = true; continue }
+        for (index, sample) in history.enumerated() {
+            guard let f = sample.value else { prevWasNil = true; continue }
             if prevWasNil { segmentID += 1 }
             let n = max(yMin, min(yMax, norm(Double(f))))
-            result.append(DataPoint(id: index, index: index, norm: n, segment: segmentID))
+            let x = sample.t - referenceNow
+            result.append(DataPoint(id: index, x: x, norm: n, segment: segmentID))
             prevWasNil = false
         }
         return result
@@ -736,9 +790,15 @@ private struct BackgroundVoiceChart: View {
     private var chartView: some View {
         let (yMin, yMax) = (yDomain.min, yDomain.max)
 
-        let f0Pts  = makePoints(pitchHistory, norm: normF0,  yMin: yMin, yMax: yMax)
-        let f1Pts  = makePoints(f1History,    norm: normFmt, yMin: yMin, yMax: yMax)
-        let f2Pts  = makePoints(f2History,    norm: normFmt, yMin: yMin, yMax: yMax)
+        // referenceNow = 三路历史最后时间戳的最大值（最新样本时刻），作为 X 轴 0 点。
+        // 空历史时取 0，X 域 -windowSeconds...0 恒有效、不画任何线。
+        let referenceNow = max(pitchHistory.last?.t ?? 0,
+                               f1History.last?.t ?? 0,
+                               f2History.last?.t ?? 0)
+
+        let f0Pts  = makePoints(pitchHistory, referenceNow: referenceNow, norm: normF0,  yMin: yMin, yMax: yMax)
+        let f1Pts  = makePoints(f1History,    referenceNow: referenceNow, norm: normFmt, yMin: yMin, yMax: yMax)
+        let f2Pts  = makePoints(f2History,    referenceNow: referenceNow, norm: normFmt, yMin: yMin, yMax: yMax)
 
         // 刻度 norm 数组供 AxisMarks(values:) 使用
         let f0Norms  = f0Ticks.map(\.norm)
@@ -747,7 +807,7 @@ private struct BackgroundVoiceChart: View {
         Chart {
             // F0 — 红色实线（始终显示）
             ForEach(f0Pts) { p in
-                LineMark(x: .value("Frame", p.index),
+                LineMark(x: .value("t", p.x),
                          y: .value("n", p.norm),
                          series: .value("s", "f0-\(p.segment)"))
                 .interpolationMethod(.monotone)
@@ -758,7 +818,7 @@ private struct BackgroundVoiceChart: View {
             // F1 — 蓝色虚线（可隐藏）
             if showF1 {
                 ForEach(f1Pts) { p in
-                    LineMark(x: .value("Frame", p.index),
+                    LineMark(x: .value("t", p.x),
                              y: .value("n", p.norm),
                              series: .value("s", "f1-\(p.segment)"))
                     .interpolationMethod(.monotone)
@@ -770,7 +830,7 @@ private struct BackgroundVoiceChart: View {
             // F2 — 绿色虚线（可隐藏）
             if showF2 {
                 ForEach(f2Pts) { p in
-                    LineMark(x: .value("Frame", p.index),
+                    LineMark(x: .value("t", p.x),
                              y: .value("n", p.norm),
                              series: .value("s", "f2-\(p.segment)"))
                     .interpolationMethod(.monotone)
@@ -779,7 +839,7 @@ private struct BackgroundVoiceChart: View {
                 }
             }
         }
-        .chartXScale(domain: 0 ... 99)
+        .chartXScale(domain: -windowSeconds ... 0)
         .chartYScale(domain: yMin ... yMax)
         .chartXAxis(.hidden)
         .chartYAxis {
