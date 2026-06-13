@@ -602,7 +602,7 @@ private struct FrequencyReadout: View {
 
     private var averageText: String? {
         guard let average, average > 0 else { return nil }
-        return String(format: "avg %.0f", average)
+        return String(format: "\(String(localized: "Avg")) %.0f", average)
     }
 
     var body: some View {
@@ -631,8 +631,8 @@ private struct FrequencyReadout: View {
                 .minimumScaleFactor(0.7)
 
             // 窗内平均（小字副行，正下方居中）。窗内无有声样本时整行隐藏，
-            // 避免静音时一排 "avg ---"。色彩用系统次级灰，弱化为辅助信息。
-            // 值每秒刷新一次且无动画直接切换：仪表盘大数字本就有平滑动画，小字 avg
+            // 避免静音时一排 "Avg ---"。色彩用系统次级灰，弱化为辅助信息。
+            // 值每秒刷新一次且无动画直接切换：仪表盘大数字本就有平滑动画，小字 Avg
             // 再跟着跳会显得很花，故只保留大数字动效。
             Text(averageText ?? " ")
                 .font(.system(size: unitSize, weight: .medium, design: .rounded))
