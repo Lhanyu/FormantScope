@@ -150,7 +150,10 @@ don't try to hot-rebuild the graph in place (that's what caused the earlier
 - **Chart coordinate mapping** (`ContentView` `BackgroundVoiceChart`): the chart's
   Y domain is dynamically expanded so normalized [0,1] aligns to the foreground
   card frame reported via `PreferenceKey`. The `yDomain` guards degenerate frames —
-  keep those guards if you edit the math.
+  keep those guards if you edit the math. Axis ticks come from a "nice numbers"
+  (1‑2‑5×10ⁿ) algorithm that forces the range endpoints; the X axis shows the
+  time window (gridlines + overlay labels, `now` at the right). Don't revert to
+  hardcoded tick tables or hide the X axis.
 - **Recording-folder error flow** (`ContentView`): re-auth (re-show picker) should
   only happen for `RecordingFolderError`, not for `RecordingError` (engine/format
   problems) — otherwise a non-folder failure can loop the picker.

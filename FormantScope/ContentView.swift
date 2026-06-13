@@ -50,6 +50,14 @@ struct ContentView: View {
     @State private var showSettings = false
 #endif
 
+    /// 读数下方"窗内平均"的快照，每秒刷新一次（见 avgTick）。仪表盘大数字 F0/F1/F2
+    /// 本就带平滑动画，若 avg 也跟着每帧高频跳动会显得很花；这里降频到 1 Hz 且无动画
+    /// 直接切值，让小字 avg 安静、只有大数字有动效。
+    @State private var avgF0: Float? = nil
+    @State private var avgF1: Float? = nil
+    @State private var avgF2: Float? = nil
+    private let avgTick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
     private var controlRoomSpring: Animation {
         .spring(response: 0.42, dampingFraction: 0.86)
     }
@@ -105,7 +113,7 @@ struct ContentView: View {
                 if w < 380 { return max(26, dividerHeight * 0.72) }
                 return dividerHeight
             }()
-            /// 读数区与屏幕左右边距（原仅依赖全宽 HStack，边缘偏紧）。
+            /// 读数区与屏幕左右边距，避免内容贴屏幕边缘。
             let readoutEdgePadding: CGFloat = {
                 if w < 340 { return 16 }
                 if w < 380 { return 20 }
@@ -162,7 +170,7 @@ struct ContentView: View {
                         FrequencyReadout(
                             label: "F0 Fundamental",
                             value: analyzer.pitch,
-                            average: windowAverage(analyzer.pitchHistory),
+                            average: avgF0,
                             color: .red,
                             labelSize: readoutLabelFontFinal,
                             valueSize: readoutValueFontFinal,
@@ -177,7 +185,7 @@ struct ContentView: View {
                             FrequencyReadout(
                                 label: "F1 Formant",
                                 value: analyzer.f1,
-                                average: windowAverage(analyzer.f1History),
+                                average: avgF1,
                                 color: .blue,
                                 labelSize: readoutLabelFontFinal,
                                 valueSize: readoutValueFontFinal,
@@ -193,7 +201,7 @@ struct ContentView: View {
                             FrequencyReadout(
                                 label: "F2 Formant",
                                 value: analyzer.f2,
-                                average: windowAverage(analyzer.f2History),
+                                average: avgF2,
                                 color: .green,
                                 labelSize: readoutLabelFontFinal,
                                 valueSize: readoutValueFontFinal,
@@ -324,6 +332,12 @@ struct ContentView: View {
             .onPreferenceChange(CardFrameKey.self) { cardFrame = $0 }
             .onPreferenceChange(ControlStripFrameKey.self) { controlStripFrame = $0 }
             .onAppear { requestMicrophonePermission() }
+            .onReceive(avgTick) { _ in
+                // 每秒刷新窗内平均快照（无动画，直接切值）。
+                avgF0 = windowAverage(analyzer.pitchHistory)
+                avgF1 = windowAverage(analyzer.f1History)
+                avgF2 = windowAverage(analyzer.f2History)
+            }
             .onChange(of: analyzer.autoStopSignal) { _, _ in
                 // 输入源/音频路由变化导致引擎被系统停止：analyzer 已自行 stop()。
                 // 这里只需把界面复位到初始态（按钮回 Start、解除录音武装），
@@ -516,8 +530,8 @@ struct ContentView: View {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = "Choose"
-        panel.message = "Choose a folder for FormantScope recordings"
+        panel.prompt = String(localized: "Choose")
+        panel.message = String(localized: "Choose a folder for FormantScope recordings")
         guard panel.runModal() == .OK, let url = panel.url else {
             pendingArmRecordAfterPick = false
             return
@@ -616,16 +630,17 @@ private struct FrequencyReadout: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
-            // 窗内平均（小字副行）。窗内无有声样本时整行隐藏，避免静音时一排 "avg ---"。
+            // 窗内平均（小字副行，正下方居中）。窗内无有声样本时整行隐藏，
+            // 避免静音时一排 "avg ---"。色彩用系统次级灰，弱化为辅助信息。
+            // 值每秒刷新一次且无动画直接切换：仪表盘大数字本就有平滑动画，小字 avg
+            // 再跟着跳会显得很花，故只保留大数字动效。
             Text(averageText ?? " ")
                 .font(.system(size: unitSize, weight: .medium, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(color.opacity(0.7))
+                .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .opacity(averageText == nil ? 0 : 1)
-                .contentTransition(.numericText())
-                .animation(.spring(duration: 0.2), value: average)
         }
         .frame(maxWidth: .infinity)
         .textSelection(.enabled)
@@ -708,34 +723,94 @@ private struct BackgroundVoiceChart: View {
     private func normF0(_ hz: Double)  -> Double { (hz - f0Min)  / (f0Max  - f0Min)  }
     private func normFmt(_ hz: Double) -> Double { (hz - fmtMin) / (fmtMax - fmtMin) }
 
-    // MARK: - 刻度候选集（Hz + 显示文本）
+    // MARK: - 刻度生成（"nice numbers" 算法）
+    //
+    // 用通用 1‑2‑5×10ⁿ 取整算法：给定任意 (min, max) 产出等间距的整刻度，并强制
+    // 带上区间两端，跨设备/任意自定义轴范围都能给出"整齐、含端点"的专业刻度。
 
     private struct AxisTick {
         let norm:  Double
         let label: String
     }
 
-    /// 从候选 Hz 列表中过滤出落在 (min, max) 内的刻度，并映射到归一化坐标。
-    private static func makeTicks(_ candidates: [(Double, String)],
-                                   min: Double, max: Double,
-                                   norm: (Double) -> Double) -> [AxisTick] {
-        candidates
-            .filter { $0.0 > min && $0.0 < max }
-            .map    { AxisTick(norm: norm($0.0), label: $0.1) }
+    /// 1‑2‑5×10ⁿ 步长：把"理想步长"(range/target)向上取到最近的 1/2/5 量级整数。
+    private static func niceStep(range: Double, target: Int) -> Double {
+        guard range > 0, target > 0 else { return 0 }
+        let raw = range / Double(target)
+        let mag = pow(10, floor(log10(raw)))
+        let norm = raw / mag                       // 落在 [1, 10)
+        let niceNorm: Double
+        switch norm {
+        case ..<1.5: niceNorm = 1
+        case ..<3:   niceNorm = 2
+        case ..<7:   niceNorm = 5
+        default:     niceNorm = 10
+        }
+        return niceNorm * mag
+    }
+
+    /// 区间 [lo, hi] 内、step 的整数倍刻度（含落在端点上的）。
+    private static func niceTicks(min lo: Double, max hi: Double, target: Int) -> [Double] {
+        let step = niceStep(range: hi - lo, target: target)
+        guard step > 0 else { return [] }
+        let eps = step * 1e-6
+        var ticks: [Double] = []
+        var v = (lo / step).rounded(.up) * step
+        while v <= hi + eps {
+            if v >= lo - eps { ticks.append(v) }
+            v += step
+        }
+        return ticks
+    }
+
+    /// 频率轴刻度：nice 刻度 + 强制带上两端点。若端点离最近的 nice 刻度太近
+    /// （< 0.35 step）则替换掉它，避免标签贴在一起。
+    private static func freqAxisTicks(min lo: Double, max hi: Double, target: Int = 6) -> [Double] {
+        var ts = niceTicks(min: lo, max: hi, target: target)
+        let step = ts.count >= 2 ? ts[1] - ts[0] : (hi - lo)
+        func forceEndpoint(_ e: Double) {
+            if let nearest = ts.min(by: { abs($0 - e) < abs($1 - e) }),
+               abs(nearest - e) < step * 0.35 {
+                ts.removeAll { $0 == nearest }
+            }
+            ts.append(e)
+        }
+        forceEndpoint(lo)
+        forceEndpoint(hi)
+        return Array(Set(ts)).sorted()
+    }
+
+    /// Hz → 紧凑标签："1k" / "1.5k" / "350"。
+    private static func freqLabel(_ hz: Double) -> String {
+        if hz >= 1_000 {
+            let k = hz / 1_000
+            return k == k.rounded() ? "\(Int(k))k" : String(format: "%.1fk", k)
+        }
+        return "\(Int(hz.rounded()))"
     }
 
     private var f0Ticks: [AxisTick] {
-        Self.makeTicks(
-            [(50,"50"),(100,"100"),(150,"150"),(200,"200"),(250,"250"),
-             (300,"300"),(350,"350"),(400,"400"),(450,"450"),(500,"500"),(550,"550")],
-            min: f0Min, max: f0Max, norm: normF0)
+        Self.freqAxisTicks(min: f0Min, max: f0Max)
+            .map { AxisTick(norm: normF0($0), label: Self.freqLabel($0)) }
     }
 
     private var fmtTicks: [AxisTick] {
-        Self.makeTicks(
-            [(300,"300"),(500,"500"),(700,"700"),(1_000,"1k"),
-             (1_500,"1.5k"),(2_000,"2k"),(2_500,"2.5k"),(3_000,"3k"),(3_500,"3.5k")],
-            min: fmtMin, max: fmtMax, norm: normFmt)
+        Self.freqAxisTicks(min: fmtMin, max: fmtMax)
+            .map { AxisTick(norm: normFmt($0), label: Self.freqLabel($0)) }
+    }
+
+    // MARK: - 时间轴刻度
+
+    /// X 轴时间刻度（秒，负值=过去，0=最新）。直接用 nice 刻度即可，
+    /// 常见窗口（8/20 s）会自然带上左端点与 0。
+    private var timeTicks: [Double] {
+        Self.niceTicks(min: -windowSeconds, max: 0, target: 5)
+    }
+
+    /// 时间标签："now" / "-2s" / "-1.5s"。
+    private func timeLabel(_ x: Double) -> String {
+        if abs(x) < 1e-6 { return "now" }
+        return x == x.rounded() ? "\(Int(x))s" : String(format: "%.1fs", x)
     }
 
     // MARK: - 数据点构造
@@ -748,8 +823,11 @@ private struct BackgroundVoiceChart: View {
         let segment: Int
     }
 
-    /// 构造数据点：保持原有的 nil 分段逻辑，但 X 改为相对 referenceNow 的秒偏移（时间轴），
-    /// 不再用帧索引。Y 仍 clamp 到当前扩展 Y 域，让超量程值可见且不被裁出 frame。
+    /// 构造数据点：nil 样本切断折线（分段），X = 相对 referenceNow 的秒偏移（时间轴），
+    /// Y clamp 到当前扩展 Y 域，让超量程值可见且不被裁出 frame。
+    /// X 早于左端点（-windowSeconds）的样本直接丢弃：history 保留 30s，但窗外的旧点
+    /// 会被 Charts 裁到 plot 左缘，若那段恰好竖直溢出就会糊成贴屏左缘的竖线，造成
+    /// 左右不对称。丢弃后曲线在左端点干净截止，溢出只剩上下两侧。
     private func makePoints(_ history: [AudioAnalyzer.TimedSample],
                             referenceNow: Double,
                             norm: (Double) -> Double,
@@ -760,9 +838,10 @@ private struct BackgroundVoiceChart: View {
         var prevWasNil = true
         for (index, sample) in history.enumerated() {
             guard let f = sample.value else { prevWasNil = true; continue }
+            let x = sample.t - referenceNow
+            if x < -windowSeconds { prevWasNil = true; continue }
             if prevWasNil { segmentID += 1 }
             let n = max(yMin, min(yMax, norm(Double(f))))
-            let x = sample.t - referenceNow
             result.append(DataPoint(id: index, x: x, norm: n, segment: segmentID))
             prevWasNil = false
         }
@@ -841,7 +920,16 @@ private struct BackgroundVoiceChart: View {
         }
         .chartXScale(domain: -windowSeconds ... 0)
         .chartYScale(domain: yMin ... yMax)
-        .chartXAxis(.hidden)
+        .chartXAxis {
+            // 时间轴只画竖向网格线（不画 AxisValueLabel）：标签会让 Charts 在底部
+            // 预留 gutter、压缩 plot 高度，从而破坏"plot 满屏、[0,1] 精准对齐主卡片"
+            // 的 Y 域映射。竖线在 plot 内部绘制、不占 gutter，安全。标签改由下方
+            // chartOverlay 用 proxy 定位到主卡片底沿。
+            AxisMarks(values: timeTicks) { _ in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                    .foregroundStyle(Color.secondary.opacity(0.12))
+            }
+        }
         .chartYAxis {
             // 左轴：F0 刻度（红色）+ 网格线
             AxisMarks(position: .leading, values: f0Norms) { val in
@@ -867,6 +955,23 @@ private struct BackgroundVoiceChart: View {
                                 .font(.system(size: 9))
                                 .foregroundStyle(Color.secondary.opacity(0.6))
                         }
+                    }
+                }
+            }
+        }
+        .chartOverlay { proxy in
+            // 时间标签贴主卡片底沿绘制。按 Y 域设计 plot Y=0 ↔ 主卡片底，故用
+            // proxy.position(forY: 0) 取该屏幕 y，再把标签上移一点放进卡片内沿，
+            // 避开屏幕最底部的能量条/按钮。cardFrame 未就绪（高度≈0，退回 Y 域 0…1）
+            // 时不画，避免标签糊在屏幕边缘。
+            if cardFrame.height > 1, let baseY = proxy.position(forY: 0) {
+                ForEach(timeTicks, id: \.self) { t in
+                    if let px = proxy.position(forX: t) {
+                        Text(timeLabel(t))
+                            .font(.system(size: 9))
+                            .foregroundStyle(Color.secondary.opacity(0.55))
+                            .fixedSize()
+                            .position(x: px, y: baseY - 9)
                     }
                 }
             }

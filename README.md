@@ -16,13 +16,13 @@
 
 <p align="center"><em>Listening view · English UI — click image to open full size</em></p>
 
-FormantScope is a SwiftUI app for iOS and macOS that captures live microphone input and shows speech acoustics in real time: **F0** (fundamental frequency), **F1** and **F2** (first and second formants), and an amplitude level. A rolling ~100-frame history is drawn as a full-screen dual-axis chart behind the readouts (F0 on the left scale; F1/F2 share the right scale).
+FormantScope is a SwiftUI app for iOS and macOS that captures live microphone input and shows speech acoustics in real time: **F0** (fundamental frequency), **F1** and **F2** (first and second formants), and an amplitude level. A rolling, time-windowed history (default 8 s, adjustable 2–20 s) is drawn as a full-screen chart behind the readouts — F0 on the left scale, F1/F2 on the right scale, and a time axis along the bottom.
 
 ### Features
 
-- Live F0 / F1 / F2 readouts with amplitude meter
+- Live F0 / F1 / F2 readouts, each with a window average, plus an amplitude meter
 - Full-screen background chart — F0 solid red, F1 blue dashed, F2 green dashed (each formant curve can be hidden)
-- **Settings** — toggle F1/F2; edit the F0 and shared F1/F2 axis ranges (persisted via `AppStorage`)
+- **Settings** — toggle F1/F2; edit the F0 and shared F1/F2 axis ranges; set the chart time window 2–20 s (persisted via `AppStorage`)
   - iOS: toolbar button opens a sheet
   - macOS: standard **Settings** (**⌘,**) plus **View** menu toggles (**⌥⌘1**, **⌥⌘2**)
 - **WAV recording** — while listening, **Record** writes `formantscope-YYYYMMdd-HHmmss.wav` into a folder you choose once per device (security-scoped bookmark); a toast shows the saved path
@@ -71,13 +71,13 @@ Released under the [MIT License](LICENSE).
 
 <p align="center"><em>主界面聆听视图 · 中文界面 — 点击图片查看原图</em></p>
 
-FormantScope 是一款面向 iOS 与 macOS 的 SwiftUI 应用，实时采集麦克风并显示语音声学参数：**F0**（基频）、**F1**/**F2**（第一、第二共振峰）与振幅电平。约 **100 帧**滚动历史以全屏双轴折线图绘制在读数背后（左轴 F0；F1、F2 共用右轴）。
+FormantScope 是一款面向 iOS 与 macOS 的 SwiftUI 应用，实时采集麦克风并显示语音声学参数：**F0**（基频）、**F1**/**F2**（第一、第二共振峰）与振幅电平。按**时间窗**滚动的历史（默认 8 秒，可在 2–20 秒间调整）以全屏折线图绘制在读数背后——左轴 F0、右轴 F1/F2，底部为时间轴。
 
 ### 功能特性
 
-- 实时 F0 / F1 / F2 读数与振幅条
+- 实时 F0 / F1 / F2 读数，各自附窗内平均值，并配振幅条
 - 全屏背景图：F0 红色实线、F1 蓝色虚线、F2 绿色虚线（可分别关闭）
-- **设置**：F1/F2 显示开关；F0 与 F1/F2 共用轴范围（通过 `AppStorage` 持久化）
+- **设置**：F1/F2 显示开关；F0 与 F1/F2 共用轴范围；图表时间窗 2–20 秒（通过 `AppStorage` 持久化）
   - iOS：右上角工具栏按钮弹出 Sheet
   - macOS：系统 **设置（⌘,）**，以及 **显示** 菜单开关（**⌥⌘1**、**⌥⌘2**）
 - **WAV 录音**：聆听中点击 **Record**，写入 `formantscope-YYYYMMdd-HHmmss.wav`；目录一次性选定（security-scoped 书签），保存后浮层显示路径

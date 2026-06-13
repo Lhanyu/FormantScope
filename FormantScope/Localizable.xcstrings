@@ -21,6 +21,26 @@
         }
       }
     },
+    "Choose" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择"
+          }
+        }
+      }
+    },
+    "Choose a folder for FormantScope recordings" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为 FormantScope 录音选择一个文件夹"
+          }
+        }
+      }
+    },
     "Choose a folder for FormantScope WAV recordings." : {
       "localizations" : {
         "zh-Hans" : {
@@ -118,6 +138,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "帧"
+          }
+        }
+      }
+    },
+    "History shown and averaged (2–20 s)." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图表显示与窗内平均所用的历史时长（2–20 秒）。"
           }
         }
       }
@@ -272,9 +302,6 @@
         }
       }
     },
-    "Seconds of history shown in the chart and averaged under each readout (2–20 s)." : {
-
-    },
     "Settings" : {
       "localizations" : {
         "zh-Hans" : {
@@ -336,7 +363,14 @@
       }
     },
     "t" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "t"
+          }
+        }
+      }
     },
     "Tap to dismiss" : {
       "localizations" : {
@@ -349,10 +383,24 @@
       }
     },
     "Time Window" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时间窗"
+          }
+        }
+      }
     },
     "Window" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗口"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

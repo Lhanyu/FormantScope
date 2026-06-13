@@ -100,7 +100,7 @@ struct SettingsView: View {
             } header: {
                 Text("Time Window")
             } footer: {
-                Text("Seconds of history shown in the chart and averaged under each readout (2–20 s).")
+                Text("History shown and averaged (2–20 s).")
             }
 
             // MARK: 恢复默认
@@ -126,6 +126,17 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+#if os(iOS)
+        // decimalPad 没有 return 键，仅靠焦点切换提交会漏掉当前框，故补三条收起/提交入口：
+        // 点空白收起（KeyboardDismissAttacher）、拖列表收起（interactively）、sheet 关闭兜底（onDisappear）。
+        .background(KeyboardDismissAttacher())
+        .scrollDismissesKeyboard(.interactively)
+        .onDisappear { commitAllAxisFields() }
+#endif
+#if os(macOS)
+        // 点空白处失焦 → 触发 AxisTextField 提交，体验与 iOS 一致。详见 ClickToResignAttacher。
+        .background(ClickToResignAttacher())
+#endif
         .confirmationDialog(
             "Reset saved recording folder?",
             isPresented: $showResetRecordingFolderConfirm,
@@ -212,6 +223,15 @@ struct SettingsView: View {
         }
     }
 
+    /// 逐个 re-parse 提交所有轴输入框（幂等）。sheet 关闭兜底，确保当前框也落盘。
+    private func commitAllAxisFields() {
+        commitAxisField(.f0Min)
+        commitAxisField(.f0Max)
+        commitAxisField(.fmtMin)
+        commitAxisField(.fmtMax)
+        commitAxisField(.timeWindow)
+    }
+
     private func commit(_ text: Binding<String>,
                         to value: inout Double,
                         isValid: (Double) -> Bool) {
@@ -234,13 +254,59 @@ struct SettingsView: View {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = "Choose"
-        panel.message = "Choose a folder for FormantScope recordings"
+        panel.prompt = String(localized: "Choose")
+        panel.message = String(localized: "Choose a folder for FormantScope recordings")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         try? folderStore.saveBookmark(for: url)
     }
 #endif
 }
+
+#if os(macOS)
+/// 点设置窗口空白处让输入框失焦（→ 触发 AxisTextField 的 controlTextDidEndEditing 提交）。
+///
+/// 用本地事件监听而非手势识别器：手势天生与鼠标事件竞争，会延迟/拦截点击导致输入框
+/// 光标不出、按钮点不动。事件监听的 handler 原样返回 event 不拦截，点击照常派发，仅在
+/// 派发前判断落点——命中空白才让当前 field resign。零事件竞争。
+private struct ClickToResignAttacher: NSViewRepresentable {
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        let coord = context.coordinator
+        coord.monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak coord] event in
+            guard let coord, let window = event.window, window === coord.view?.window,
+                  let content = window.contentView else { return event }
+            let pt = content.convert(event.locationInWindow, from: nil)
+            var hit = content.hitTest(pt)
+            while let v = hit {
+                // 命中输入框/任意控件：交给控件自己处理（放光标、点按钮），不动焦点。
+                if v is NSControl || v is NSText { return event }
+                hit = v.superview
+            }
+            // 空白处：让当前编辑框 resign（触发提交），但仍把事件原样放行。
+            window.makeFirstResponder(nil)
+            return event
+        }
+        coord.view = view
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        if let m = coordinator.monitor {
+            NSEvent.removeMonitor(m)
+            coordinator.monitor = nil
+        }
+    }
+
+    final class Coordinator {
+        weak var view: NSView?
+        var monitor: Any?
+    }
+}
+#endif
 
 #if os(macOS)
 /// AppKit-backed text field used inside macOS Form.
@@ -296,6 +362,77 @@ private struct AxisTextField: NSViewRepresentable {
         @objc func commit(_ sender: NSTextField) {
             text = sender.stringValue
             onCommit()
+        }
+    }
+}
+#endif
+
+#if os(iOS)
+import UIKit
+
+/// 在所属 window 上挂一个"点击空白收键盘"的手势桥。
+///
+/// 为什么不用 SwiftUI 的 `.onTapGesture`：Form 底层是可滚动 List，在其上加全局
+/// tap 会与滚动手势、TextField 命中测试相互仲裁，造成卡顿与"二次聚焦失败"。
+/// 挂到 window 的 `UITapGestureRecognizer` 设 `cancelsTouchesInView = false` 不吞触摸
+/// 且永远识别；是否收键盘改在响应时按落点 hitTest 判定（见 Coordinator.dismiss），
+/// 命中输入控件不收，避免与聚焦抢占。收键盘后 `@FocusState` 归 nil，触发既有 onChange 提交。
+private struct KeyboardDismissAttacher: UIViewRepresentable {
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        DispatchQueue.main.async {
+            guard let window = view.window,
+                  context.coordinator.tap == nil else { return }
+            let tap = UITapGestureRecognizer(target: context.coordinator,
+                                             action: #selector(Coordinator.dismiss))
+            tap.cancelsTouchesInView = false
+            tap.requiresExclusiveTouchType = false
+            tap.delegate = context.coordinator
+            window.addGestureRecognizer(tap)
+            context.coordinator.tap = tap
+            context.coordinator.installedOn = window
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
+
+    /// 设置页消失时把挂在 window 上的 tap 手势摘掉，避免反复开关设置页时
+    /// 手势在 window 上越堆越多。
+    static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
+        if let tap = coordinator.tap {
+            coordinator.installedOn?.removeGestureRecognizer(tap)
+            coordinator.tap = nil
+        }
+    }
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        weak var installedOn: UIWindow?
+        weak var tap: UITapGestureRecognizer?
+
+        // 手势永远识别、永不吞触摸；是否收键盘在响应时用命中测试判定，避免竞态。
+        // 不在 shouldReceive 里按 touch.view 的 superview 链过滤：SwiftUI Form/List 里
+        // touch.view 多是 cell/内部视图，真正的 UITextField 在其子/兄弟层向上找不到，
+        // 过滤会失效并与正在建立的 first responder 抢占。改在落点 hitTest 取最深视图，
+        // 命中输入控件就不收键盘。
+        @objc func dismiss(_ sender: UITapGestureRecognizer) {
+            guard let window = sender.view as? UIWindow else { return }
+            let pt = sender.location(in: window)
+            let hit = window.hitTest(pt, with: nil)
+            var v = hit
+            while let cur = v {
+                if cur is UITextField || cur is UITextView { return }
+                v = cur.superview
+            }
+            window.endEditing(true)
+        }
+
+        // 与其它手势并存，绝不抢占，避免影响滚动 / 控件点击。
+        func gestureRecognizer(_ g: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+            true
         }
     }
 }
